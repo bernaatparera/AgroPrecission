@@ -7,11 +7,16 @@ export const Layout = () => {
   const { user, logout } = useAuth();
   const location = useLocation();
 
-  if (!user && location.pathname !== '/login') {
+  // 1. Definimos cuáles son las rutas públicas donde no exigimos estar logueado
+  const isPublicRoute = location.pathname === '/login' || location.pathname === '/register';
+
+  // 2. Si no hay usuario y NO es una ruta pública, lo mandamos al login
+  if (!user && !isPublicRoute) {
     return <Navigate to="/login" replace />;
   }
 
-  if (location.pathname === '/login') {
+  // 3. Si es una ruta pública, renderizamos solo la página (sin la barra de navegación superior)
+  if (isPublicRoute) {
     return <Outlet />;
   }
 

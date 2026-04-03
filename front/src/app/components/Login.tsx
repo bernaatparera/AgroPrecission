@@ -1,18 +1,58 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router';
-import { useAuth } from '../context/AuthContext';
+import { useNavigate, Link } from 'react-router';
+import { useAuth, AuthUser } from '../context/AuthContext';
 import { Sprout } from 'lucide-react';
 
 export const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const { login } = useAuth();
+  const [error, setError] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { loginSession } = useAuth();
   const navigate = useNavigate();
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    login(email);
-    navigate('/farms');
+    setError(null);
+    setIsSubmitting(true);
+
+    try {
+      // 1. Obtener Token (FastAPI espera x-www-form-urlencoded)
+      const params = new URLSearchParams();
+      params.append('username', email);
+      params.append('password', password);
+
+      const tokenRes = await fetch("http://localhost:8000/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: params,
+      });
+
+      if (!tokenRes.ok) {
+        throw new Error("Credenciales inválidas");
+      }
+
+      const tokenData = await tokenRes.json();
+      const accessToken = tokenData.access_token;
+
+      // 2. Obtener Perfil del Usuario
+      const userRes = await fetch("http://localhost:8000/auth/me", {
+        headers: { "Authorization": `Bearer ${accessToken}` }
+      });
+
+      if (!userRes.ok) throw new Error("Error obteniendo perfil");
+      
+      const userData: AuthUser = await userRes.json();
+
+      // 3. Establecer Sesión
+      loginSession(accessToken, userData);
+      navigate('/farms');
+
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -27,6 +67,8 @@ export const Login = () => {
         </div>
         
         <form onSubmit={handleLogin} className="space-y-6">
+          {error && <div className="p-3 bg-red-100 text-red-700 text-sm rounded-lg">{error}</div>}
+          
           <div>
             <label className="block text-sm font-medium text-gray-700">Email</label>
             <input 
@@ -51,10 +93,18 @@ export const Login = () => {
           </div>
           <button 
             type="submit"
-            className="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-colors"
+            disabled={isSubmitting}
+            className="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50 transition-colors"
           >
-            Iniciar Sesión
+            {isSubmitting ? 'Verificando...' : 'Iniciar Sesión'}
           </button>
+
+          <div className="text-center mt-4">
+            <span className="text-sm text-gray-600">¿No tienes cuenta? </span>
+            <Link to="/register" className="text-sm font-medium text-green-600 hover:text-green-500">
+              Regístrate aquí
+            </Link>
+          </div>
         </form>
       </div>
     </div>

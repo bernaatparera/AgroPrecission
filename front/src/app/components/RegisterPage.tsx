@@ -1,158 +1,114 @@
 import { useState } from "react";
+import { useNavigate } from "react-router";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Label } from "./ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/card";
 import { Sprout, ArrowLeft } from "lucide-react";
 
-interface RegisterPageProps {
-  onRegister: () => void;
-  onBackToLogin: () => void;
-}
-
-export function RegisterPage({ onRegister, onBackToLogin }: RegisterPageProps) {
+export function RegisterPage() {
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     name: "",
+    lastname: "", // Añadido para coincidir con el backend
     email: "",
     password: "",
     confirmPassword: "",
   });
-  const [errors, setErrors] = useState<{ [key: string]: string }>({});
+  
+  const [serverError, setServerError] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleChange = (field: string, value: string) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
-    // Limpiar error cuando el usuario empieza a escribir
-    if (errors[field]) {
-      setErrors(prev => ({ ...prev, [field]: "" }));
-    }
-  };
-
-  const validateForm = () => {
-    const newErrors: { [key: string]: string } = {};
-
-    if (!formData.name.trim()) {
-      newErrors.name = "El nombre es requerido";
-    }
-
-    if (!formData.email.trim()) {
-      newErrors.email = "El email es requerido";
-    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
-      newErrors.email = "Email inválido";
-    }
-
-    if (!formData.password) {
-      newErrors.password = "La contraseña es requerida";
-    } else if (formData.password.length < 6) {
-      newErrors.password = "La contraseña debe tener al menos 6 caracteres";
-    }
-
-    if (!formData.confirmPassword) {
-      newErrors.confirmPassword = "Confirma tu contraseña";
-    } else if (formData.password !== formData.confirmPassword) {
-      newErrors.confirmPassword = "Las contraseñas no coinciden";
-    }
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
-
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    if (validateForm()) {
-      // Simulación de registro exitoso
-      onRegister();
+    setServerError(null);
+
+    // Validación básica de coincidencia
+    if (formData.password !== formData.confirmPassword) {
+      setServerError("Las contraseñas no coinciden");
+      return;
+    }
+
+    setIsLoading(true);
+
+    try {
+      const response = await fetch("http://localhost:8000/auth/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          username: formData.email, // El backend usa 'username' para el email
+          password: formData.password,
+          nombre: formData.name,
+          apellidos: formData.lastname
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        // Capturamos el error 409 o 400 del backend
+        throw new Error(data.detail || "Error al registrar el usuario");
+      }
+
+      // Registro éxito -> Vamos al login
+      alert("Registro completado con éxito. Ahora puedes iniciar sesión.");
+      navigate("/login");
+
+    } catch (err: any) {
+      setServerError(err.message);
+    } finally {
+      setIsLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-green-50 to-emerald-100">
-      <Card className="w-full max-w-md mx-4">
-        <CardHeader className="space-y-4 text-center">
-          <div className="mx-auto w-16 h-16 bg-green-600 rounded-full flex items-center justify-center">
-            <Sprout className="w-8 h-8 text-white" />
+    <div className="min-h-screen flex items-center justify-center bg-green-50">
+      <Card className="w-full max-w-md">
+        <CardHeader className="text-center">
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-green-100 mb-4 mx-auto">
+            <Sprout className="w-8 h-8 text-green-600" />
           </div>
-          <div>
-            <CardTitle className="text-2xl">Crear Cuenta</CardTitle>
-            <CardDescription>
-              Regístrate para comenzar a gestionar tus cosechas
-            </CardDescription>
-          </div>
+          <CardTitle>Crear Cuenta</CardTitle>
+          <CardDescription>Únete a la gestión agrícola inteligente</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>Nombre</Label>
+                <Input required value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} />
+              </div>
+              <div className="space-y-2">
+                <Label>Apellidos</Label>
+                <Input required value={formData.lastname} onChange={e => setFormData({...formData, lastname: e.target.value})} />
+              </div>
+            </div>
+            
             <div className="space-y-2">
-              <Label htmlFor="name">Nombre completo</Label>
-              <Input
-                id="name"
-                type="text"
-                placeholder="Juan Pérez"
-                value={formData.name}
-                onChange={(e) => handleChange("name", e.target.value)}
-                className={errors.name ? "border-red-500" : ""}
-              />
-              {errors.name && (
-                <p className="text-sm text-red-500">{errors.name}</p>
-              )}
+              <Label>Email</Label>
+              <Input type="email" required value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                type="email"
-                placeholder="tu@email.com"
-                value={formData.email}
-                onChange={(e) => handleChange("email", e.target.value)}
-                className={errors.email ? "border-red-500" : ""}
-              />
-              {errors.email && (
-                <p className="text-sm text-red-500">{errors.email}</p>
-              )}
+              <Label>Contraseña</Label>
+              <Input type="password" required value={formData.password} onChange={e => setFormData({...formData, password: e.target.value})} />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="password">Contraseña</Label>
-              <Input
-                id="password"
-                type="password"
-                placeholder="••••••••"
-                value={formData.password}
-                onChange={(e) => handleChange("password", e.target.value)}
-                className={errors.password ? "border-red-500" : ""}
-              />
-              {errors.password && (
-                <p className="text-sm text-red-500">{errors.password}</p>
-              )}
+              <Label>Confirmar Contraseña</Label>
+              <Input type="password" required value={formData.confirmPassword} onChange={e => setFormData({...formData, confirmPassword: e.target.value})} />
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="confirmPassword">Confirmar contraseña</Label>
-              <Input
-                id="confirmPassword"
-                type="password"
-                placeholder="••••••••"
-                value={formData.confirmPassword}
-                onChange={(e) => handleChange("confirmPassword", e.target.value)}
-                className={errors.confirmPassword ? "border-red-500" : ""}
-              />
-              {errors.confirmPassword && (
-                <p className="text-sm text-red-500">{errors.confirmPassword}</p>
-              )}
-            </div>
+            {serverError && (
+              <p className="text-sm text-red-500 font-medium">{serverError}</p>
+            )}
 
-            <Button type="submit" className="w-full bg-green-600 hover:bg-green-700">
-              Registrarse
+            <Button type="submit" className="w-full bg-green-600 hover:bg-green-700" disabled={isLoading}>
+              {isLoading ? "Registrando..." : "Registrarse"}
             </Button>
 
-            <Button
-              type="button"
-              variant="ghost"
-              className="w-full"
-              onClick={onBackToLogin}
-            >
-              <ArrowLeft className="w-4 h-4 mr-2" />
-              Volver al inicio de sesión
+            <Button type="button" variant="ghost" className="w-full" onClick={() => navigate("/login")}>
+              <ArrowLeft className="w-4 h-4 mr-2" /> Volver al login
             </Button>
           </form>
         </CardContent>

@@ -6,6 +6,7 @@ import { FarmList } from './components/FarmList';
 import { FarmDashboard } from './components/FarmDashboard';
 import { NewPlotForm } from './components/NewPlotForm';
 import { PlotDashboard } from './components/PlotDashboard';
+import { RegisterPage } from './components/RegisterPage';
 
 export const router = createBrowserRouter([
   {
@@ -14,6 +15,7 @@ export const router = createBrowserRouter([
     children: [
       { index: true, element: <Navigate to="/farms" replace /> },
       { path: 'login', element: <Login /> },
+      { path: 'register', element: <RegisterPage /> },
       { path: 'farms', element: <FarmList /> },
       { path: 'farms/:farmId', element: <FarmDashboard /> },
       { path: 'farms/:farmId/plots/new', element: <NewPlotForm /> },
