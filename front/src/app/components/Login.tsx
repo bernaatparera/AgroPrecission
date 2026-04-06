@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router';
-import { useAuth, AuthUser } from '../context/AuthContext';
+import { useAuth } from '../context/AuthContext';
 import { Sprout } from 'lucide-react';
+import { AuthUser } from '../types/auth';
+import { getMe, loginUser } from '../services/authService';
 
 export const Login = () => {
   const [email, setEmail] = useState('');
@@ -17,36 +19,21 @@ export const Login = () => {
     setIsSubmitting(true);
 
     try {
-      // 1. Obtener Token (FastAPI espera x-www-form-urlencoded)
-      const params = new URLSearchParams();
-      params.append('username', email);
-      params.append('password', password);
-
-      const tokenRes = await fetch("http://localhost:8000/auth/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/x-www-form-urlencoded" },
-        body: params,
+      // 1. login → token
+      const tokenData = await loginUser({
+        username: email,
+        password: password,
       });
 
-      if (!tokenRes.ok) {
-        throw new Error("Credenciales inválidas");
-      }
-
-      const tokenData = await tokenRes.json();
       const accessToken = tokenData.access_token;
 
-      // 2. Obtener Perfil del Usuario
-      const userRes = await fetch("http://localhost:8000/auth/me", {
-        headers: { "Authorization": `Bearer ${accessToken}` }
-      });
+      // 2. perfil
+      const userData = await getMe(accessToken);
 
-      if (!userRes.ok) throw new Error("Error obteniendo perfil");
-      
-      const userData: AuthUser = await userRes.json();
-
-      // 3. Establecer Sesión
+      // 3. sesión
       loginSession(accessToken, userData);
-      navigate('/farms');
+
+      navigate("/farms");
 
     } catch (err: any) {
       setError(err.message);
@@ -65,14 +52,14 @@ export const Login = () => {
           <h2 className="text-3xl font-bold text-gray-900">Bienvenido de nuevo</h2>
           <p className="mt-2 text-sm text-gray-600">Accede a tu plataforma de gestión</p>
         </div>
-        
+
         <form onSubmit={handleLogin} className="space-y-6">
           {error && <div className="p-3 bg-red-100 text-red-700 text-sm rounded-lg">{error}</div>}
-          
+
           <div>
             <label className="block text-sm font-medium text-gray-700">Email</label>
-            <input 
-              type="email" 
+            <input
+              type="email"
               required
               className="mt-1 w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-colors"
               placeholder="tu@email.com"
@@ -82,8 +69,8 @@ export const Login = () => {
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700">Contraseña</label>
-            <input 
-              type="password" 
+            <input
+              type="password"
               required
               className="mt-1 w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-colors"
               placeholder="••••••••"
@@ -91,7 +78,7 @@ export const Login = () => {
               onChange={(e) => setPassword(e.target.value)}
             />
           </div>
-          <button 
+          <button
             type="submit"
             disabled={isSubmitting}
             className="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50 transition-colors"

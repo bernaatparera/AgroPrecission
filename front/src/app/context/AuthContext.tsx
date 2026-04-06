@@ -1,13 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-
-// Interfaces basadas en los esquemas de FastAPI
-export interface AuthUser {
-  id: string;
-  email: string;
-  nombre: string;
-  apellidos: string;
-  activo: boolean;
-}
+import { AuthUser } from "../types/auth";
+import { getMe } from "../services/authService";
 
 type AuthContextType = {
   user: AuthUser | null;
@@ -25,31 +18,26 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [token, setToken] = useState<string | null>(localStorage.getItem('token'));
   const [isLoading, setIsLoading] = useState(true);
 
-  // Hidratar la sesión si hay un token al cargar la app
   useEffect(() => {
-    const fetchUser = async () => {
+    // Hidratar la sesión si hay un token al cargar la app
+    const hydrateSession = async () => {
       if (!token) {
         setIsLoading(false);
         return;
       }
+
       try {
-        const response = await fetch("http://localhost:8000/auth/me", {
-          headers: { "Authorization": `Bearer ${token}` }
-        });
-        if (response.ok) {
-          const userData: AuthUser = await response.json();
-          setUser(userData);
-        } else {
-          logout(); // Token expirado o inválido
-        }
+        const userData = await getMe(token);
+        setUser(userData);
       } catch (error) {
-        console.error("Error validando sesión:", error);
+        console.error("Token inválido:", error);
+        logout();
       } finally {
         setIsLoading(false);
       }
     };
 
-    fetchUser();
+    hydrateSession();
   }, [token]);
 
   const loginSession = (newToken: string, userData: AuthUser) => {
@@ -65,7 +53,16 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, token, isAuthenticated: !!token, isLoading, loginSession, logout }}>
+    <AuthContext.Provider
+      value={{
+        user,
+        token,
+        isAuthenticated: !!user,
+        isLoading,
+        loginSession,
+        logout
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );
