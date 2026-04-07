@@ -1,4 +1,6 @@
-import React, { createContext, useContext, useState, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { createFarm, getFarms } from '../services/farmService';
+import { CreateFarmRequest, Farm } from '../types/farm';
 
 export type Sensor = { id: string; x: number; y: number };
 export type CellState = 'normal' | 'water' | 'harvest';
@@ -16,32 +18,19 @@ export type Plot = {
   createdAt: string;
 };
 
-export type Farm = {
-  id: string;
-  name: string;
-  width: number;
-  height: number;
-};
-
 type AppContextType = {
   farms: Farm[];
   plots: Plot[];
-  addFarm: (farm: Omit<Farm, 'id'>) => void;
+  addFarm: (farm: CreateFarmRequest) => Promise<Farm>;
   addPlot: (plot: Omit<Plot, 'id' | 'cells' | 'sensors' | 'createdAt'>) => void;
   updateCellState: (plotId: string, x: number, y: number, state: CellState) => void;
 };
-
-const defaultFarms: Farm[] = [
-  { id: 'f1', name: 'Granja Principal', width: 100, height: 100 },
-  { id: 'f2', name: 'Huerto Sur', width: 50, height: 50 },
-];
 
 const generateInitialCells = (width: number, height: number, sensors: Sensor[]): Cell[] => {
   const cells: Cell[] = [];
   for (let y = 0; y < height; y++) {
     for (let x = 0; x < width; x++) {
       const isSensor = sensors.some(s => s.x === x && s.y === y);
-      // Randomly assign some states for demonstration
       const rand = Math.random();
       let state: CellState = 'normal';
       if (rand > 0.8) state = 'water';
@@ -70,19 +59,35 @@ const defaultPlots: Plot[] = [
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
 export const AppProvider = ({ children }: { children: ReactNode }) => {
-  const [farms, setFarms] = useState<Farm[]>(defaultFarms);
+  const [farms, setFarms] = useState<Farm[]>([]);
   const [plots, setPlots] = useState<Plot[]>(defaultPlots);
 
-  const addFarm = (farmData: Omit<Farm, 'id'>) => {
-    const newFarm = { ...farmData, id: `f${Date.now()}` };
-    setFarms([...farms, newFarm]);
+  // cargar farms desde API
+  useEffect(() => {
+    const loadFarms = async () => {
+      try {
+        const data = await getFarms();
+        setFarms(data);
+      } catch (err) {
+        console.error("Error cargando granjas", err);
+      }
+    };
+
+    loadFarms();
+  }, []);
+
+  // crear farm (API + estado)
+  const addFarm = async (farmData: CreateFarmRequest): Promise<Farm> => {
+    const newFarm = await createFarm(farmData);
+    setFarms((prev) => [...prev, newFarm]);
+    return newFarm;
   };
 
+  // plots (de momento fake, luego se conectan a API)
   const addPlot = (plotData: Omit<Plot, 'id' | 'cells' | 'sensors' | 'createdAt'>) => {
     const area = plotData.width * plotData.height;
-    // Calculate sensors: roughly 1 sensor per 4 sq meters, minimum 1
     const numSensors = Math.max(1, Math.floor(area / 4));
-    
+
     const sensors: Sensor[] = [];
     const usedPositions = new Set<string>();
 
@@ -106,16 +111,18 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
       createdAt: new Date().toISOString(),
     };
 
-    setPlots([...plots, newPlot]);
+    setPlots((prev) => [...prev, newPlot]);
   };
 
   const updateCellState = (plotId: string, x: number, y: number, state: CellState) => {
-    setPlots(currentPlots => 
+    setPlots(currentPlots =>
       currentPlots.map(p => {
         if (p.id !== plotId) return p;
         return {
           ...p,
-          cells: p.cells.map(c => (c.x === x && c.y === y ? { ...c, state } : c))
+          cells: p.cells.map(c =>
+            c.x === x && c.y === y ? { ...c, state } : c
+          )
         };
       })
     );

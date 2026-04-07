@@ -5,41 +5,35 @@
 - Docker Desktop
 - Python 3.11+
 
-## 1. Base de Datos (Docker)
+## 1. Base de Datos (Docker) y API FastAPI
 
 ```bash
 docker compose up -d
 ```
+
+Esto levanta automáticamente:
+
+- Base de datos PostgreSQL
+- API FastAPI
 
 Verificar que está corriendo:
 ```bash
 docker ps
 ```
 
-## 2. API FastAPI
+Deberías ver contenedores como:
 
-```bash
-# Crear entorno virtual (solo la primera vez)
-python -m venv .venv
-
-# Activar entorno
-# Windows PowerShell:
-.\.venv\Scripts\Activate.ps1
-# Windows CMD:
-.\.venv\Scripts\activate.bat
-# Git Bash / Linux / Mac:   (RECOMENDADO)
-source .venv/Scripts/activate
-
-# Instalar dependencias (solo la primera vez)
-pip install -r requirements.txt
-
-# Levantar API
-uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
-```
+- agroprecision-db
+- agroprecision-api
 
 **URLs:**
 - Swagger UI: http://localhost:8000/docs
 - Health check: http://localhost:8000/health/live
+
+### Nota sobre FastAPI
+
+La API ya no se ejecuta manualmente con uvicorn.
+Se inicia automáticamente al levantar Docker.
 
 ## 3. Simulador IoT
 
