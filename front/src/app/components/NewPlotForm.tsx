@@ -4,6 +4,7 @@ import { useAppContext } from '../context/AppContext';
 import { ArrowLeft, Save, Maximize, Sprout, CheckCircle2 } from 'lucide-react';
 import { clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
+import { createParcela } from '../services/plotService';
 
 const CROP_TYPES = [
   { id: 'tomate', label: 'Tomate', icon: '🍅' },
@@ -25,19 +26,25 @@ export const NewPlotForm = () => {
 
   const estimatedSensors = Math.max(1, Math.floor((width * height) / 4));
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!farmId || !selectedCrop) return;
 
-    addPlot({
-      farmId,
-      name,
-      width,
-      height,
-      cropType: selectedCrop,
-    });
-    
-    navigate(`/farms/${farmId}`);
+    if (!farmId || !name) return;
+
+    try {
+      // TODO: guardar tipo de cultivo cuando backend lo soporte. Y que añada tmb fecha de creación etc..
+      await createParcela({
+        granja_id: Number(farmId),
+        nombre: name,
+        tamx: width,
+        tamy: height,
+      });
+
+      navigate(`/farms/${farmId}`);
+
+    } catch (error) {
+      console.error("Error creando parcela", error);
+    }
   };
 
   return (
@@ -76,7 +83,7 @@ export const NewPlotForm = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             <div className="space-y-6">
               <h3 className="text-sm font-medium text-gray-700 border-b border-gray-200 pb-2">Dimensiones</h3>
-              
+
               <div className="flex items-center gap-4">
                 <div className="flex-1">
                   <label className="block text-xs text-gray-500 mb-1">Ancho (X metros)</label>
@@ -118,7 +125,7 @@ export const NewPlotForm = () => {
 
             <div className="space-y-6">
               <h3 className="text-sm font-medium text-gray-700 border-b border-gray-200 pb-2">Tipo de Cultivo</h3>
-              
+
               <div className="flex flex-wrap gap-3">
                 {CROP_TYPES.map((crop) => (
                   <button
@@ -127,7 +134,7 @@ export const NewPlotForm = () => {
                     onClick={() => setSelectedCrop(crop.label)}
                     className={twMerge(
                       "flex items-center px-4 py-2.5 rounded-full border text-sm font-medium transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500",
-                      selectedCrop === crop.label 
+                      selectedCrop === crop.label
                         ? "bg-green-50 border-green-500 text-green-700 shadow-sm"
                         : "bg-white border-gray-200 text-gray-700 hover:border-green-300 hover:bg-green-50/50"
                     )}

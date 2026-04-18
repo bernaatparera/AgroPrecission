@@ -9,9 +9,18 @@ export interface MedicionCreate {
 export interface MedicionRead {
   id: number;
   sensor_id: number;
+  casilla_id: number;
   variable: string;
   valor: number;
   dia_hora: string; // ISO date-time
+}
+
+export interface MeasurementsByPlotResponse {
+  total: number;
+  limit: number;
+  offset: number;
+  page: number;
+  items: MedicionRead[];
 }
 
 export interface ListMedicionesParams {
