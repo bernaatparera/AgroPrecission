@@ -1,6 +1,7 @@
 import { ParcelaCreate, ParcelaRead, ListParcelasParams } from "../types/plot";
 import { MeasurementsByPlotResponse } from "../types/measurement";
 import { apiRequest } from "./apiClient";
+import { getMeasurementsByPlot as getMeasurementsByPlotFromMeasurementService } from "./measurementService";
 
 // GET parcelas
 export const getParcelas = async (params: ListParcelasParams = {}): Promise<ParcelaRead[]> => {
@@ -28,5 +29,5 @@ export const createParcela = async (data: ParcelaCreate): Promise<ParcelaRead> =
 
 // GET mediciones de una parcela
 export const getMeasurementsByPlot = async (plotId: number): Promise<MeasurementsByPlotResponse> => {
-  return apiRequest(`/parcelas/${plotId}/mediciones`);
+  return getMeasurementsByPlotFromMeasurementService(plotId);
 };
