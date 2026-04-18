@@ -6,6 +6,11 @@ export const getFarms = async (): Promise<Farm[]> => {
   return apiRequest("/granjas");
 };
 
+// GET por id
+export const getFarmById = async (id: string): Promise<Farm> => {
+  return apiRequest(`/granjas/${id}`);
+};
+
 // POST crear
 export const createFarm = async (data: CreateFarmRequest): Promise<Farm> => {
   return apiRequest("/granjas", {

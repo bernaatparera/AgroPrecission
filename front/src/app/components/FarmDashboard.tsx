@@ -1,9 +1,11 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router';
 import { useAppContext } from '../context/AppContext';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, LineChart, Line, BarChart, Bar, Legend } from 'recharts';
 import { Plus, LayoutGrid, Droplets, Thermometer, ArrowLeft, TrendingUp, Package, MapPin, Calendar } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
+import { getFarmById } from '../services/farmService';
+import { getParcelas } from '../services/plotService';
 
 const mockData = [
   { name: 'Lun', humedad: 4000, temperatura: 2400 },
@@ -34,22 +36,71 @@ const cropDistribution = [
 ];
 
 export const FarmDashboard = () => {
-  const { farmId } = useParams<{ farmId: string }>();
   const navigate = useNavigate();
-  const { farms, plots } = useAppContext();
+  const { farmId } = useParams<{ farmId: string }>();
 
-  const farm = farms.find(f => f.id === farmId);
-  const farmPlots = plots.filter(p => p.farmId === farmId);
+  const [farm, setFarm] = useState<any | null>(null);
+  const [plots, setPlots] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  console.log("HOLA")
 
-  if (!farm) return <div className="p-8 text-center text-gray-500">Granja no encontrada</div>;
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+
+        const farmData = await getFarmById(farmId!);
+        setFarm(farmData);
+
+        const plotsData = await getParcelas();
+
+        const farmPlots = plotsData.filter(
+          (p) => String(p.granja_id) === String(farmId)
+        );
+
+        setPlots(farmPlots);
+      } catch (error) {
+        console.error(error);
+        setError("Error cargando datos");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (farmId) fetchData();
+  }, [farmId]);
+
+  if (loading) {
+    return <div className="p-8 text-center text-gray-500">Cargando...</div>;
+  }
+
+  if (error) {
+    return <div className="p-8 text-center text-red-500">{error}</div>;
+  }
+
+  if (!farm) {
+    return <div className="p-8 text-center text-gray-500">Granja no encontrada</div>;
+  }
+
+  // TODO obtener info de sensores en el listado de parcelas, fecha de creacion, tipos cultivo
 
   // Calcular estadísticas agregadas de todas las parcelas
-  const totalArea = farmPlots.reduce((sum, plot) => sum + (plot.width * plot.height), 0);
-  const totalSensors = farmPlots.reduce((sum, plot) => sum + plot.sensors.length, 0);
-  const avgProduction = Math.round(8150 / (farmPlots.length || 1));
-  const totalProduction = avgProduction * farmPlots.length;
-  const activeHarvests = Math.min(farmPlots.length * 2, 8);
-  const completedHarvests = Math.min(farmPlots.length, 5);
+  const totalArea = plots.reduce(
+    (sum, plot) => sum + ((plot.width ?? 0) * (plot.height ?? 0)),
+    0
+  );
+
+  const totalSensors = plots.reduce(
+    (sum, plot) => sum + (plot.sensors?.length ?? 0),
+    0
+  );
+
+  const avgProduction = Math.round(8150 / (plots.length || 1));
+  const totalProduction = avgProduction * plots.length;
+
+  const activeHarvests = Math.min(plots.length * 2, 8);
+  const completedHarvests = Math.min(plots.length, 5);
 
   return (
     <div className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
@@ -60,12 +111,12 @@ export const FarmDashboard = () => {
 
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">{farm.name}</h1>
+          <h1 className="text-3xl font-bold text-gray-900">{farm.nombre}</h1>
           <p className="mt-1 text-sm text-gray-500">
-            Dimensiones totales: {farm.width}m x {farm.height}m · {farmPlots.length} parcelas activas
+            {farm.ubicacion_geo} · {plots.length} parcelas activas
           </p>
         </div>
-        <button 
+        <button
           onClick={() => navigate(`/farms/${farmId}/plots/new`)}
           className="inline-flex items-center px-4 py-2 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 w-full md:w-auto justify-center"
         >
@@ -116,7 +167,7 @@ export const FarmDashboard = () => {
           </CardHeader>
           <CardContent>
             <div className="text-2xl">{totalArea} m²</div>
-            <p className="text-xs text-gray-500 mt-1">{farmPlots.length} parcelas · {totalSensors} sensores</p>
+            <p className="text-xs text-gray-500 mt-1">{plots.length} parcelas · {totalSensors} sensores</p>
           </CardContent>
         </Card>
       </div>
@@ -132,22 +183,22 @@ export const FarmDashboard = () => {
               <AreaChart data={mockData}>
                 <defs>
                   <linearGradient id="colorHumedad" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.8}/>
-                    <stop offset="95%" stopColor="#3b82f6" stopOpacity={0}/>
+                    <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.8} />
+                    <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
                   </linearGradient>
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e5e7eb" />
-                <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fill: '#6b7280', fontSize: 12}} dy={10} />
-                <YAxis axisLine={false} tickLine={false} tick={{fill: '#6b7280', fontSize: 12}} dx={-10} />
-                <RechartsTooltip 
-                  contentStyle={{borderRadius: '0.5rem', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)'}}
+                <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: '#6b7280', fontSize: 12 }} dy={10} />
+                <YAxis axisLine={false} tickLine={false} tick={{ fill: '#6b7280', fontSize: 12 }} dx={-10} />
+                <RechartsTooltip
+                  contentStyle={{ borderRadius: '0.5rem', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
                 />
                 <Area type="monotone" dataKey="humedad" stroke="#3b82f6" fillOpacity={1} fill="url(#colorHumedad)" />
               </AreaChart>
             </ResponsiveContainer>
           </div>
         </div>
-        
+
         <div className="bg-gradient-to-br from-green-50 to-emerald-100 rounded-xl shadow-sm border border-green-200 p-6 flex flex-col justify-center items-center text-center">
           <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center shadow-sm mb-4">
             <Thermometer className="w-8 h-8 text-orange-500" />
@@ -205,14 +256,14 @@ export const FarmDashboard = () => {
       </h2>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-        {farmPlots.length === 0 ? (
+        {plots.length === 0 ? (
           <div className="col-span-full py-12 text-center bg-gray-50 rounded-xl border-2 border-dashed border-gray-300">
             <p className="text-gray-500">Aún no tienes parcelas en esta granja.</p>
           </div>
         ) : (
-          farmPlots.map((plot) => (
-            <div 
-              key={plot.id} 
+          plots.map((plot) => (
+            <div
+              key={plot.id}
               onClick={() => navigate(`/farms/${farmId}/plots/${plot.id}`)}
               className="bg-white rounded-xl shadow-sm border border-gray-200 p-5 hover:border-green-400 hover:shadow-md transition-all cursor-pointer group"
             >
@@ -223,8 +274,8 @@ export const FarmDashboard = () => {
                 <span className="text-xs text-gray-500">{plot.width}x{plot.height}m</span>
               </div>
               <h3 className="text-lg font-bold text-gray-900 mb-1 group-hover:text-green-600 transition-colors">{plot.name}</h3>
-              <p className="text-sm text-gray-500 mb-4">{plot.sensors.length} sensores instalados</p>
-              
+              <p className="text-sm text-gray-500 mb-4">{plot.sensors?.length ?? 0} sensores instalados</p>
+
               <div className="flex items-center justify-between text-xs border-t border-gray-100 pt-3">
                 <span className="text-gray-400">Creada {new Date(plot.createdAt).toLocaleDateString()}</span>
                 <span className="font-medium text-green-600 group-hover:translate-x-1 transition-transform inline-block">&rarr;</span>
