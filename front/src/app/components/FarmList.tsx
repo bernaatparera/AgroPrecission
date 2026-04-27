@@ -1,13 +1,28 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router';
 import { useAppContext } from '../context/AppContext';
 import { useAuth } from '../context/AuthContext';
 import { Warehouse, Plus, LayoutGrid } from 'lucide-react';
+import { getParcelas } from '../services/plotService';
+import { ParcelaRead } from '../types/plot';
 
 export const FarmList = () => {
-  const { farms, plots } = useAppContext();
+  const { farms } = useAppContext();
+  const [allPlots, setAllPlots] = useState<ParcelaRead[]>([]);
   const { user } = useAuth();
   const navigate = useNavigate();
+
+  useEffect(() => {
+    const fetchPlots = async () => {
+      try {
+        const plotsData = await getParcelas();
+        setAllPlots(plotsData);
+      } catch (err) {
+        console.error("Error al cargar parcelas en FarmList", err);
+      }
+    };
+    fetchPlots();
+  }, []);
 
   return (
     <div className="max-w-6xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
@@ -49,8 +64,7 @@ export const FarmList = () => {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {farms.map((farm) => {
-            // TODO: cuando plots esté conectado a API corregir condición
-            const farmPlots = plots.filter(p => p.farmId === String(farm.id));
+            const farmPlots = allPlots.filter(p => p.granja_id === farm.id);
 
             return (
               <div

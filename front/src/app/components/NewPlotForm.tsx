@@ -18,7 +18,6 @@ const CROP_TYPES = [
 export const NewPlotForm = () => {
   const { farmId } = useParams<{ farmId: string }>();
   const navigate = useNavigate();
-  const { addPlot } = useAppContext();
 
   const [name, setName] = useState('');
   const [width, setWidth] = useState<number>(3);
