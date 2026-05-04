@@ -27,6 +27,15 @@ const services = [
 
 export const ServiciosPage = () => {
   const navigate = useNavigate();
+  const [isScrolled, setIsScrolled] = React.useState(false);
+
+  React.useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 10);
+    };
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   return (
     <div
@@ -35,7 +44,7 @@ export const ServiciosPage = () => {
     >
       <div className="absolute inset-0 bg-gradient-to-r from-black/20 via-black/40 to-black/80"></div>
 
-      <header className="relative z-20 flex items-center justify-between p-6 md:px-12 lg:px-20 pt-8">
+      <header className={`sticky top-0 z-50 flex items-center justify-between p-6 md:px-12 lg:px-20 transition-all duration-300 ${isScrolled ? 'backdrop-blur-md bg-black/10' : 'bg-transparent'}`}>
         <div className="flex items-center gap-3 cursor-pointer" onClick={() => navigate('/')}>
           <div className="bg-green-600 p-2 rounded-lg">
             <Sprout className="w-6 h-6 text-white" />

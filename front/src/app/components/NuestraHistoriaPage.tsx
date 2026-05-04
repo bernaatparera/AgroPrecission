@@ -4,6 +4,15 @@ import { Sprout } from 'lucide-react';
 
 export const NuestraHistoriaPage = () => {
   const navigate = useNavigate();
+  const [isScrolled, setIsScrolled] = React.useState(false);
+
+  React.useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 10);
+    };
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   return (
     <div
@@ -12,7 +21,7 @@ export const NuestraHistoriaPage = () => {
     >
       <div className="absolute inset-0 bg-gradient-to-r from-black/20 via-black/40 to-black/80"></div>
 
-      <header className="relative z-20 flex items-center justify-between p-6 md:px-12 lg:px-20 pt-8">
+      <header className={`sticky top-0 z-50 flex items-center justify-between p-6 md:px-12 lg:px-20 transition-all duration-300 ${isScrolled ? 'backdrop-blur-md bg-black/10' : 'bg-transparent'}`}>
         <div className="flex items-center gap-3 cursor-pointer" onClick={() => navigate('/')}>
           <div className="bg-green-600 p-2 rounded-lg">
             <Sprout className="w-6 h-6 text-white" />
@@ -41,7 +50,7 @@ export const NuestraHistoriaPage = () => {
               Sensores, plataformas IoT e inteligencia artificial ya existen, pero quedan fuera del alcance de la mayoría de explotaciones por su coste, su complejidad y su dependencia de infraestructuras que no siempre están disponibles en el campo.
             </p>
             <p className="text-lg text-gray-300 font-light drop-shadow-md max-w-xl ml-auto leading-relaxed">
-              AgroPrecision propone una respuesta práctica. Empezamos por el cultivo de lechuga —ciclo corto, alta sensibilidad a la humedad y la temperatura— como caso de estudio para demostrar que la monitorización granular es posible y accesible. La simulación de datos de sensores permite construir desde hoy el dataset estructurado que mañana alimentará modelos de inteligencia artificial, sin esperar a tener instalada una infraestructura física completa.
+              AgroPrecision propone una respuesta práctica. Empezamos por el cultivo de lechuga (ciclo corto, alta sensibilidad a la humedad y la temperatura) como caso de estudio para demostrar que la monitorización granular es posible y accesible. La simulación de datos de sensores permite construir desde hoy el dataset estructurado que mañana alimentará modelos de inteligencia artificial, sin esperar a tener instalada una infraestructura física completa.
             </p>
             <p className="text-lg text-green-400 font-medium drop-shadow-md max-w-xl ml-auto leading-relaxed">
               El objetivo no es la tecnología en sí. Es que el agricultor tome mejores decisiones, use mejor el agua, anticipe problemas y obtenga más con menos.
