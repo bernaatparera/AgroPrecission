@@ -6,7 +6,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app.database import get_db
-from app.models import Casilla, Medicion, Parcela, Sensor, TipoCultivo
+from app.models import Casilla, Medicion, Parcela, Sensor, TipoCultivo, Usuario, UsuarioGranja
 from app.schemas import (
     ParcelaCreate,
     ParcelaListRead,
@@ -15,8 +15,32 @@ from app.schemas import (
     ParcelaRead,
     ParcelaUpdate,
 )
+from app.security import get_current_user
 
 router = APIRouter(prefix="/parcelas", tags=["parcelas"])
+
+
+def _usuario_tiene_acceso_a_granja(granja_id: int, current_user: Usuario, db: Session) -> bool:
+    stmt = select(UsuarioGranja).where(
+        UsuarioGranja.granja_id == granja_id,
+        UsuarioGranja.usuario_id == current_user.id,
+    )
+    return db.scalars(stmt).first() is not None
+
+
+def _obtener_parcela_del_usuario(parcela_id: int, current_user: Usuario, db: Session) -> Parcela:
+    stmt = (
+        select(Parcela)
+        .join(UsuarioGranja, UsuarioGranja.granja_id == Parcela.granja_id)
+        .where(
+            Parcela.id == parcela_id,
+            UsuarioGranja.usuario_id == current_user.id,
+        )
+    )
+    parcela = db.scalars(stmt).first()
+    if parcela is None:
+        raise HTTPException(status_code=404, detail="Parcela no encontrada")
+    return parcela
 
 
 @router.get("/", response_model=list[ParcelaListRead], summary="Listar parcelas")
@@ -25,6 +49,7 @@ def list_parcelas(
     skip: int = Query(0, ge=0),
     limit: int = Query(100, ge=1, le=500),
     db: Session = Depends(get_db),
+    current_user: Usuario = Depends(get_current_user),
 ) -> list[ParcelaListRead]:
     sensores_count = func.count(Sensor.id)
     stmt = (
@@ -42,6 +67,8 @@ def list_parcelas(
         .outerjoin(Casilla, Casilla.parcela_id == Parcela.id)
         .outerjoin(Sensor, Sensor.casilla_id == Casilla.id)
         .outerjoin(TipoCultivo, TipoCultivo.id == Parcela.tipo_cultivo_id)
+        .join(UsuarioGranja, UsuarioGranja.granja_id == Parcela.granja_id)
+        .where(UsuarioGranja.usuario_id == current_user.id)
         .group_by(
             Parcela.id,
             Parcela.granja_id,
@@ -73,15 +100,23 @@ def list_parcelas(
 
 
 @router.get("/{parcela_id}", response_model=ParcelaRead, summary="Obtener parcela por ID")
-def get_parcela(parcela_id: int, db: Session = Depends(get_db)) -> Parcela:
-    parcela = db.get(Parcela, parcela_id)
-    if parcela is None:
-        raise HTTPException(status_code=404, detail="Parcela no encontrada")
-    return parcela
+def get_parcela(
+    parcela_id: int,
+    db: Session = Depends(get_db),
+    current_user: Usuario = Depends(get_current_user),
+) -> Parcela:
+    return _obtener_parcela_del_usuario(parcela_id, current_user, db)
 
 
 @router.post("/", response_model=ParcelaRead, status_code=201, summary="Crear parcela")
-def create_parcela(payload: ParcelaCreate, db: Session = Depends(get_db)) -> Parcela:
+def create_parcela(
+    payload: ParcelaCreate,
+    db: Session = Depends(get_db),
+    current_user: Usuario = Depends(get_current_user),
+) -> Parcela:
+    if not _usuario_tiene_acceso_a_granja(payload.granja_id, current_user, db):
+        raise HTTPException(status_code=404, detail="Granja no encontrada")
+
     if payload.tipo_cultivo_id is not None:
         tipo_cultivo = db.get(TipoCultivo, payload.tipo_cultivo_id)
         if tipo_cultivo is None:
@@ -101,10 +136,16 @@ def create_parcela(payload: ParcelaCreate, db: Session = Depends(get_db)) -> Par
 
 
 @router.put("/{parcela_id}", response_model=ParcelaRead, summary="Actualizar parcela")
-def update_parcela(parcela_id: int, payload: ParcelaCreate, db: Session = Depends(get_db)) -> Parcela:
-    parcela = db.get(Parcela, parcela_id)
-    if parcela is None:
-        raise HTTPException(status_code=404, detail="Parcela no encontrada")
+def update_parcela(
+    parcela_id: int,
+    payload: ParcelaCreate,
+    db: Session = Depends(get_db),
+    current_user: Usuario = Depends(get_current_user),
+) -> Parcela:
+    parcela = _obtener_parcela_del_usuario(parcela_id, current_user, db)
+
+    if not _usuario_tiene_acceso_a_granja(payload.granja_id, current_user, db):
+        raise HTTPException(status_code=404, detail="Granja no encontrada")
 
     if payload.tipo_cultivo_id is not None:
         tipo_cultivo = db.get(TipoCultivo, payload.tipo_cultivo_id)
@@ -126,16 +167,22 @@ def update_parcela(parcela_id: int, payload: ParcelaCreate, db: Session = Depend
 
 
 @router.patch("/{parcela_id}", response_model=ParcelaRead, summary="Actualizar parcialmente parcela")
-def patch_parcela(parcela_id: int, payload: ParcelaUpdate, db: Session = Depends(get_db)) -> Parcela:
-    parcela = db.get(Parcela, parcela_id)
-    if parcela is None:
-        raise HTTPException(status_code=404, detail="Parcela no encontrada")
+def patch_parcela(
+    parcela_id: int,
+    payload: ParcelaUpdate,
+    db: Session = Depends(get_db),
+    current_user: Usuario = Depends(get_current_user),
+) -> Parcela:
+    parcela = _obtener_parcela_del_usuario(parcela_id, current_user, db)
 
     updates = payload.model_dump(exclude_unset=True)
     if not updates:
         raise HTTPException(status_code=400, detail="No se enviaron campos para actualizar")
 
     new_granja_id = updates.get("granja_id", parcela.granja_id)
+    if not _usuario_tiene_acceso_a_granja(new_granja_id, current_user, db):
+        raise HTTPException(status_code=404, detail="Granja no encontrada")
+
     if "tipo_cultivo_id" in updates and updates["tipo_cultivo_id"] is not None:
         tipo_cultivo = db.get(TipoCultivo, updates["tipo_cultivo_id"])
         if tipo_cultivo is None:
@@ -156,10 +203,12 @@ def patch_parcela(parcela_id: int, payload: ParcelaUpdate, db: Session = Depends
 
 
 @router.delete("/{parcela_id}", status_code=204, summary="Eliminar parcela")
-def delete_parcela(parcela_id: int, db: Session = Depends(get_db)) -> None:
-    parcela = db.get(Parcela, parcela_id)
-    if parcela is None:
-        raise HTTPException(status_code=404, detail="Parcela no encontrada")
+def delete_parcela(
+    parcela_id: int,
+    db: Session = Depends(get_db),
+    current_user: Usuario = Depends(get_current_user),
+) -> None:
+    parcela = _obtener_parcela_del_usuario(parcela_id, current_user, db)
 
     db.delete(parcela)
     db.commit()
@@ -174,10 +223,9 @@ def get_parcela_mediciones(
     fecha_inicio: datetime | None = Query(default=None),
     fecha_fin: datetime | None = Query(default=None),
     db: Session = Depends(get_db),
+    current_user: Usuario = Depends(get_current_user),
 ) -> ParcelaMedicionPage:
-    parcela = db.get(Parcela, parcela_id)
-    if parcela is None:
-        raise HTTPException(status_code=404, detail="Parcela no encontrada")
+    _obtener_parcela_del_usuario(parcela_id, current_user, db)
 
     if fecha_inicio and fecha_fin and fecha_inicio > fecha_fin:
         raise HTTPException(status_code=400, detail="fecha_inicio no puede ser mayor que fecha_fin")

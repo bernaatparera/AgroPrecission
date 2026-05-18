@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { createFarm, getFarms } from '../services/farmService';
 import { CreateFarmRequest, Farm } from '../types/farm';
+import { useAuth } from './AuthContext';
 
 type AppContextType = {
   farms: Farm[];
@@ -13,9 +14,19 @@ const AppContext = createContext<AppContextType | undefined>(undefined);
 
 export const AppProvider = ({ children }: { children: ReactNode }) => {
   const [farms, setFarms] = useState<Farm[]>([]);
+  const { user, isLoading } = useAuth();
 
   // cargar farms desde API
   useEffect(() => {
+    if (isLoading) {
+      return;
+    }
+
+    if (!user) {
+      setFarms([]);
+      return;
+    }
+
     const loadFarms = async () => {
       try {
         const data = await getFarms();
@@ -26,7 +37,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     };
 
     loadFarms();
-  }, []);
+  }, [user, isLoading]);
 
   // crear farm (API + estado)
   const addFarm = async (farmData: CreateFarmRequest): Promise<Farm> => {
