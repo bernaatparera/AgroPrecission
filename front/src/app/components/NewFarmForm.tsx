@@ -61,20 +61,20 @@ export function NewFarmForm() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-background">
       {/* Header */}
-      <header className="bg-white border-b border-gray-200 sticky top-0 z-10">
+      <header className="bg-card border-b border-border sticky top-0 z-10">
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <Button
               variant="ghost"
               size="icon"
               onClick={() => navigate('/farms')}
-              className="rounded-full hover:bg-gray-100"
+              className="rounded-full text-foreground hover:bg-accent"
             >
               <X className="w-5 h-5" />
             </Button>
-            <h1 className="text-xl font-bold text-gray-900 absolute left-1/2 transform -translate-x-1/2">
+            <h1 className="text-xl font-bold text-foreground absolute left-1/2 transform -translate-x-1/2">
               Nueva Granja
             </h1>
             <div className="w-10"></div>
@@ -103,12 +103,12 @@ export function NewFarmForm() {
                   placeholder="Ej. Granja El Olivo o Finca Santa María"
                   value={formData.name}
                   onChange={(e) => handleChange("name", e.target.value)}
-                  className={`border-gray-300 ${errors.name ? "border-red-500" : ""}`}
+                  className={errors.name ? "border-red-500" : ""}
                 />
                 {errors.name && (
                   <p className="text-sm text-red-500">{errors.name}</p>
                 )}
-                <p className="text-xs text-gray-500 mt-1">
+                <p className="text-xs text-muted-foreground mt-1">
                   Este será el nombre principal de tu granja en AgroPrecision
                 </p>
               </div>
@@ -171,7 +171,7 @@ export function NewFarmForm() {
                   placeholder="Ej. 39.5696, 2.6502 o Calle Mayor 12"
                   value={formData.ubicacion}
                   onChange={(e) => handleChange("ubicacion", e.target.value)}
-                  className={`border-gray-300 ${errors.ubicacion ? "border-red-500" : ""}`}
+                  className={errors.ubicacion ? "border-red-500" : ""}
                 />
                 {errors.ubicacion && (
                   <p className="text-sm text-red-500">{errors.ubicacion}</p>
@@ -183,17 +183,17 @@ export function NewFarmForm() {
           {/* Sección 2: Dimensiones del Terreno */}
 
           {/* Información adicional */}
-          <Card className="bg-blue-50 border-blue-200">
+          <Card className="bg-blue-50 dark:bg-blue-950/40 border-blue-200 dark:border-blue-800">
             <CardContent className="pt-6">
               <div className="flex items-start gap-3">
-                <div className="flex-shrink-0 w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                <div className="flex-shrink-0 w-8 h-8 bg-blue-100 dark:bg-blue-900/50 rounded-full flex items-center justify-center">
                   <span className="text-blue-600 text-lg">ℹ️</span>
                 </div>
                 <div>
-                  <p className="text-sm font-medium text-blue-900 mb-1">
+                  <p className="text-sm font-medium text-blue-900 dark:text-blue-300 mb-1">
                     Próximo paso
                   </p>
-                  <p className="text-sm text-blue-700">
+                  <p className="text-sm text-blue-700 dark:text-blue-400">
                     Una vez creada la granja, podrás dividirla en parcelas individuales y asignar sensores y tipos de cultivo a cada una.
                   </p>
                 </div>
@@ -204,7 +204,7 @@ export function NewFarmForm() {
       </main>
 
       {/* Botón fijo en la parte inferior */}
-      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-4">
+      <div className="fixed bottom-0 left-0 right-0 bg-card border-t border-border p-4">
         <div className="container mx-auto max-w-2xl">
           <Button
             onClick={handleSubmit}

@@ -54,8 +54,8 @@ export const FarmList = () => {
       />
       <div className="flex justify-between items-center mb-8">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Mis Granjas</h1>
-          <p className="mt-1 text-sm text-gray-500">Bienvenido de nuevo, {user?.nombre}</p>
+          <h1 className="text-3xl font-bold text-foreground">Mis Granjas</h1>
+          <p className="mt-1 text-sm text-muted-foreground">Bienvenido de nuevo, {user?.nombre}</p>
         </div>
         <button onClick={() => navigate("/farms/new")} className="inline-flex items-center px-4 py-2 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700">
           <Plus className="w-5 h-5 mr-2 -ml-1" />
@@ -66,16 +66,16 @@ export const FarmList = () => {
       {farms.length === 0 ? (
         <div className="text-center py-20">
           <div className="flex justify-center mb-4">
-            <div className="p-4 bg-green-100 rounded-full">
-              <Warehouse className="w-10 h-10 text-green-600" />
+            <div className="p-4 bg-green-100 dark:bg-green-900/30 rounded-full">
+              <Warehouse className="w-10 h-10 text-green-600 dark:text-green-400" />
             </div>
           </div>
 
-          <h2 className="text-xl font-semibold text-gray-900 mb-2">
+          <h2 className="text-xl font-semibold text-foreground mb-2">
             Aún no tienes granjas
           </h2>
 
-          <p className="text-gray-500 mb-6">
+          <p className="text-muted-foreground mb-6">
             Crea tu primera granja para empezar a gestionar tus cultivos 🌱
           </p>
 
@@ -96,11 +96,11 @@ export const FarmList = () => {
               <div
                 key={farm.id}
                 onClick={() => navigate(`/farms/${farm.id}`)}
-                className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow cursor-pointer group"
+                className="bg-card rounded-xl shadow-sm border border-border overflow-hidden hover:shadow-md transition-shadow cursor-pointer group"
               >
                 <div className="p-6">
                   <div className="flex items-center justify-between mb-4">
-                    <div className="p-3 bg-green-100 text-green-600 rounded-lg group-hover:bg-green-600 group-hover:text-white transition-colors">
+                    <div className="p-3 bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 rounded-lg group-hover:bg-green-600 group-hover:text-white transition-colors">
                       <Warehouse className="w-6 h-6" />
                     </div>
                     <div className="flex items-center gap-2">
@@ -111,11 +111,11 @@ export const FarmList = () => {
                           const coords = parts[1] ? parts[1].replace(')', '') : null;
                           return (
                             <>
-                              <p className="text-sm font-semibold text-gray-700 truncate max-w-[140px]" title={place}>
+                              <p className="text-sm font-semibold text-foreground truncate max-w-[140px]" title={place}>
                                 {place || 'Sin ubicación'}
                               </p>
                               {coords && (
-                                <p className="text-[10px] text-gray-400 font-mono leading-none mt-0.5">
+                                <p className="text-[10px] text-muted-foreground font-mono leading-none mt-0.5">
                                   {coords}
                                 </p>
                               )}
@@ -126,7 +126,7 @@ export const FarmList = () => {
                       <button
                         onClick={(e) => { e.stopPropagation(); setPendingDeleteFarmId(farm.id); }}
                         disabled={isDeletingFarm}
-                        className="p-1.5 rounded-full text-gray-400 hover:text-red-600 hover:bg-red-50 transition-colors disabled:opacity-50"
+                        className="p-1.5 rounded-full text-muted-foreground hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950 transition-colors disabled:opacity-50"
                         title="Eliminar granja"
                       >
                         <Trash2 className="w-4 h-4" />
@@ -134,16 +134,16 @@ export const FarmList = () => {
                     </div>
                   </div>
 
-                  <h3 className="text-xl font-bold text-gray-900 mb-2">
+                  <h3 className="text-xl font-bold text-foreground mb-2">
                     {farm.nombre}
                   </h3>
 
-                  <div className="mt-4 pt-4 border-t border-gray-100 flex items-center justify-between text-sm">
-                    <div className="flex items-center text-gray-600">
-                      <LayoutGrid className="w-4 h-4 mr-1.5 text-gray-400" />
+                  <div className="mt-4 pt-4 border-t border-border flex items-center justify-between text-sm">
+                    <div className="flex items-center text-muted-foreground">
+                      <LayoutGrid className="w-4 h-4 mr-1.5 text-muted-foreground" />
                       <span>{farmPlots.length} parcelas</span>
                     </div>
-                    <div className="text-green-600 font-medium group-hover:underline">
+                    <div className="text-green-600 dark:text-green-400 font-medium group-hover:underline">
                       Ver dashboard →
                     </div>
                   </div>

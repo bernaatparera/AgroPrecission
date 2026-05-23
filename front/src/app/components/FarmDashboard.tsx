@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useTheme } from '../context/ThemeContext';
 import { useParams, useNavigate } from 'react-router';
 import {
   AreaChart,
@@ -40,6 +41,13 @@ export const FarmDashboard = () => {
   const navigate = useNavigate();
   const { farmId } = useParams<{ farmId: string }>();
   const { updateFarmInContext } = useAppContext();
+
+  const { isDark } = useTheme();
+  const chartGridColor = isDark ? '#374151' : '#e5e7eb';
+  const chartTickColor = isDark ? '#9ca3af' : '#6b7280';
+  const chartTooltipStyle = isDark
+    ? { borderRadius: '0.5rem', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.4)', backgroundColor: '#1f2937', color: '#f9fafb' }
+    : { borderRadius: '0.5rem', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' };
 
   const [farm, setFarm] = useState<Farm | null>(null);
   const [plots, setPlots] = useState<ParcelaRead[]>([]);
@@ -100,7 +108,7 @@ export const FarmDashboard = () => {
   };
 
   if (loading) {
-    return <div className="p-8 text-center text-gray-500">Cargando...</div>;
+    return <div className="p-8 text-center text-muted-foreground">Cargando...</div>;
   }
 
   if (error) {
@@ -108,7 +116,7 @@ export const FarmDashboard = () => {
   }
 
   if (!farm) {
-    return <div className="p-8 text-center text-gray-500">Granja no encontrada</div>;
+    return <div className="p-8 text-center text-muted-foreground">Granja no encontrada</div>;
   }
 
   const resumen = dashboard?.resumen;
@@ -143,7 +151,7 @@ export const FarmDashboard = () => {
         </div>
       )}
 
-      <div className="flex items-center text-sm font-medium text-gray-500 hover:text-gray-900 mb-8 cursor-pointer w-fit" onClick={() => navigate('/farms')}>
+      <div className="flex items-center text-sm font-medium text-muted-foreground hover:text-foreground mb-8 cursor-pointer w-fit" onClick={() => navigate('/farms')}>
         <ArrowLeft className="w-4 h-4 mr-1" />
         Volver a mis granjas
       </div>
@@ -151,7 +159,7 @@ export const FarmDashboard = () => {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
         <div className="flex items-center gap-4">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">{farm.nombre}</h1>
+            <h1 className="text-3xl font-bold text-foreground">{farm.nombre}</h1>
             <div className="mt-1">
               {(() => {
                 const parts = (farm.ubicacion_geo || '').split(' (');
@@ -159,25 +167,25 @@ export const FarmDashboard = () => {
                 const coords = parts[1] ? parts[1].replace(')', '') : null;
                 return (
                   <>
-                    <p className="text-sm font-medium text-gray-600">
+                    <p className="text-sm font-medium text-muted-foreground">
                       {place || 'Sin ubicación'}
                     </p>
                     {coords && (
-                      <p className="text-xs text-gray-400 font-mono">
+                      <p className="text-xs text-muted-foreground font-mono">
                         {coords}
                       </p>
                     )}
                   </>
                 );
               })()}
-              <p className="mt-1 text-xs text-gray-400 italic">
+              <p className="mt-1 text-xs text-muted-foreground italic">
                 {resumen?.parcelas_count ?? plots.length} parcelas activas
               </p>
             </div>
           </div>
           <button
             onClick={() => setIsEditing(true)}
-            className="p-2 text-gray-400 hover:text-green-600 rounded-full hover:bg-green-50 transition-colors"
+            className="p-2 text-muted-foreground hover:text-green-600 rounded-full hover:bg-green-50 dark:hover:bg-green-900/30 transition-colors"
             title="Editar Granja"
           >
             <Edit3 className="w-5 h-5" />
@@ -200,7 +208,7 @@ export const FarmDashboard = () => {
           </CardHeader>
           <CardContent>
             <div className="text-2xl">{resumen?.parcelas_count ?? plots.length}</div>
-            <p className="text-xs text-gray-500 mt-1">Parcelas registradas en la granja</p>
+            <p className="text-xs text-muted-foreground mt-1">Parcelas registradas en la granja</p>
           </CardContent>
         </Card>
 
@@ -211,7 +219,7 @@ export const FarmDashboard = () => {
           </CardHeader>
           <CardContent>
             <div className="text-2xl">{resumen?.sensores_count ?? 0}</div>
-            <p className="text-xs text-gray-500 mt-1">Sensores ligados a esta granja</p>
+            <p className="text-xs text-muted-foreground mt-1">Sensores ligados a esta granja</p>
           </CardContent>
         </Card>
 
@@ -222,7 +230,7 @@ export const FarmDashboard = () => {
           </CardHeader>
           <CardContent>
             <div className="text-2xl">{resumen?.mediciones_count ?? 0}</div>
-            <p className="text-xs text-gray-500 mt-1">Última lectura: {latestMeasurementLabel}</p>
+            <p className="text-xs text-muted-foreground mt-1">Última lectura: {latestMeasurementLabel}</p>
           </CardContent>
         </Card>
 
@@ -233,14 +241,14 @@ export const FarmDashboard = () => {
           </CardHeader>
           <CardContent>
             <div className="text-2xl">{resumen?.area_total ?? 0} m²</div>
-            <p className="text-xs text-gray-500 mt-1">{resumen?.parcelas_count ?? plots.length} parcelas activas</p>
+            <p className="text-xs text-muted-foreground mt-1">{resumen?.parcelas_count ?? plots.length} parcelas activas</p>
           </CardContent>
         </Card>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
-        <div className="col-span-1 lg:col-span-2 bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+        <div className="col-span-1 lg:col-span-2 bg-card rounded-xl shadow-sm border border-border p-6">
+          <h2 className="text-lg font-semibold text-foreground mb-4 flex items-center">
             <Droplets className="w-5 h-5 mr-2 text-blue-500" />
             Media de Humedad Global
           </h2>
@@ -254,34 +262,32 @@ export const FarmDashboard = () => {
                       <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
                     </linearGradient>
                   </defs>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e5e7eb" />
-                  <XAxis dataKey="etiqueta" axisLine={false} tickLine={false} tick={{ fill: '#6b7280', fontSize: 12 }} dy={10} />
-                  <YAxis axisLine={false} tickLine={false} tick={{ fill: '#6b7280', fontSize: 12 }} dx={-10} />
-                  <RechartsTooltip
-                    contentStyle={{ borderRadius: '0.5rem', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
-                  />
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={chartGridColor} />
+                  <XAxis dataKey="etiqueta" axisLine={false} tickLine={false} tick={{ fill: chartTickColor, fontSize: 12 }} dy={10} />
+                  <YAxis axisLine={false} tickLine={false} tick={{ fill: chartTickColor, fontSize: 12 }} dx={-10} />
+                  <RechartsTooltip contentStyle={chartTooltipStyle} />
                   <Area type="monotone" dataKey="humedad_media" stroke="#3b82f6" fillOpacity={1} fill="url(#colorHumedad)" />
                 </AreaChart>
               </ResponsiveContainer>
             ) : (
-              <div className="h-full rounded-xl border border-dashed border-gray-200 bg-gray-50 flex items-center justify-center text-sm text-gray-500">
+              <div className="h-full rounded-xl border border-dashed border-border bg-muted flex items-center justify-center text-sm text-muted-foreground">
                 Aún no hay mediciones de humedad suficientes.
               </div>
             )}
           </div>
         </div>
 
-        <div className="bg-gradient-to-br from-green-50 to-emerald-100 rounded-xl shadow-sm border border-green-200 p-6 flex flex-col justify-center items-center text-center">
-          <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center shadow-sm mb-4">
+        <div className="bg-gradient-to-br from-green-50 to-emerald-100 dark:from-green-950/50 dark:to-emerald-900/40 rounded-xl shadow-sm border border-green-200 dark:border-green-800 p-6 flex flex-col justify-center items-center text-center">
+          <div className="w-16 h-16 bg-white dark:bg-green-900/50 rounded-full flex items-center justify-center shadow-sm mb-4">
             <Thermometer className="w-8 h-8 text-orange-500" />
           </div>
-          <h3 className="text-sm font-medium text-green-800 mb-1">Temperatura Media</h3>
-          <p className="text-4xl font-bold text-green-900 mb-2">
+          <h3 className="text-sm font-medium text-green-800 dark:text-green-300 mb-1">Temperatura Media</h3>
+          <p className="text-4xl font-bold text-green-900 dark:text-green-200 mb-2">
             {resumen?.temperatura_media !== null && resumen?.temperatura_media !== undefined
               ? `${resumen.temperatura_media}°C`
               : "--"}
           </p>
-          <div className="text-xs text-green-700 bg-white/60 px-3 py-1.5 rounded-full inline-block mt-2">
+          <div className="text-xs text-green-700 dark:text-green-300 bg-white/60 dark:bg-green-900/40 px-3 py-1.5 rounded-full inline-block mt-2">
             Humedad media: {resumen?.humedad_media !== null && resumen?.humedad_media !== undefined ? `${resumen.humedad_media}%` : "--"}
           </div>
         </div>
@@ -296,17 +302,17 @@ export const FarmDashboard = () => {
             {series.length > 0 ? (
               <ResponsiveContainer width="100%" height={300}>
                 <LineChart data={series}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="etiqueta" />
-                  <YAxis />
-                  <RechartsTooltip />
+                  <CartesianGrid strokeDasharray="3 3" stroke={chartGridColor} />
+                  <XAxis dataKey="etiqueta" tick={{ fill: chartTickColor }} />
+                  <YAxis tick={{ fill: chartTickColor }} />
+                  <RechartsTooltip contentStyle={chartTooltipStyle} />
                   <Legend />
                   <Line type="monotone" dataKey="humedad_media" stroke="#16a34a" strokeWidth={2} name="Humedad media (%)" />
                   <Line type="monotone" dataKey="temperatura_media" stroke="#2563eb" strokeWidth={2} name="Temperatura media (°C)" />
                 </LineChart>
               </ResponsiveContainer>
             ) : (
-              <div className="h-[300px] rounded-xl border border-dashed border-gray-200 bg-gray-50 flex items-center justify-center text-sm text-gray-500">
+              <div className="h-[300px] rounded-xl border border-dashed border-border bg-muted flex items-center justify-center text-sm text-muted-foreground">
                 No hay suficientes mediciones para calcular la evolución.
               </div>
             )}
@@ -321,15 +327,15 @@ export const FarmDashboard = () => {
             {distribucionCultivos.length > 0 ? (
               <ResponsiveContainer width="100%" height={300}>
                 <BarChart data={distribucionCultivos}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="nombre" />
-                  <YAxis />
-                  <RechartsTooltip />
+                  <CartesianGrid strokeDasharray="3 3" stroke={chartGridColor} />
+                  <XAxis dataKey="nombre" tick={{ fill: chartTickColor }} />
+                  <YAxis tick={{ fill: chartTickColor }} />
+                  <RechartsTooltip contentStyle={chartTooltipStyle} />
                   <Bar dataKey="parcelas_count" fill="#16a34a" name="Parcelas" />
                 </BarChart>
               </ResponsiveContainer>
             ) : (
-              <div className="h-[300px] rounded-xl border border-dashed border-gray-200 bg-gray-50 flex items-center justify-center text-sm text-gray-500">
+              <div className="h-[300px] rounded-xl border border-dashed border-border bg-muted flex items-center justify-center text-sm text-muted-foreground">
                 No hay parcelas suficientes para mostrar la distribución.
               </div>
             )}
@@ -337,50 +343,50 @@ export const FarmDashboard = () => {
         </Card>
       </div>
 
-      <h2 className="text-xl font-bold text-gray-900 mb-6 flex items-center">
-        <LayoutGrid className="w-6 h-6 mr-2 text-gray-400" />
+      <h2 className="text-xl font-bold text-foreground mb-6 flex items-center">
+        <LayoutGrid className="w-6 h-6 mr-2 text-muted-foreground" />
         Mis Parcelas
       </h2>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
         {plots.length === 0 ? (
-          <div className="col-span-full py-12 text-center bg-gray-50 rounded-xl border-2 border-dashed border-gray-300">
-            <p className="text-gray-500">Aún no tienes parcelas en esta granja.</p>
+          <div className="col-span-full py-12 text-center bg-muted rounded-xl border-2 border-dashed border-border">
+            <p className="text-muted-foreground">Aún no tienes parcelas en esta granja.</p>
           </div>
         ) : (
           plots.map((plot) => (
             <div
               key={plot.id}
               onClick={() => navigate(`/farms/${farmId}/plots/${plot.id}`)}
-              className="bg-white rounded-xl shadow-sm border border-gray-200 p-5 hover:border-green-400 hover:shadow-md transition-all cursor-pointer group"
+              className="bg-card rounded-xl shadow-sm border border-border p-5 hover:border-green-400 hover:shadow-md transition-all cursor-pointer group"
             >
               <div className="flex justify-between items-start mb-4">
-                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 dark:bg-green-900/40 text-green-800 dark:text-green-300">
                   {plot.tipo_cultivo_nombre ?? 'Sin cultivo'}
                 </span>
                 <div className="flex items-center gap-2">
-                  <span className="text-xs text-gray-500">{plot.tamx}x{plot.tamy}m</span>
+                  <span className="text-xs text-muted-foreground">{plot.tamx}x{plot.tamy}m</span>
                   <button
                     onClick={(event) => {
                       event.stopPropagation();
                       setPendingDeletePlotId(plot.id);
                     }}
                     disabled={isDeletingPlot}
-                    className="p-1 rounded text-red-400 hover:text-red-600 hover:bg-red-50 transition-colors disabled:opacity-50"
+                    className="p-1 rounded text-red-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950 transition-colors disabled:opacity-50"
                     title="Eliminar parcela"
                   >
                     <Trash2 className="w-3.5 h-3.5" />
                   </button>
                 </div>
               </div>
-              <h3 className="text-lg font-bold text-gray-900 mb-1 group-hover:text-green-600 transition-colors">{plot.nombre}</h3>
-              <p className="text-sm text-gray-500 mb-4">{plot.sensores_count ?? 0} sensores instalados</p>
+              <h3 className="text-lg font-bold text-foreground mb-1 group-hover:text-green-600 dark:group-hover:text-green-400 transition-colors">{plot.nombre}</h3>
+              <p className="text-sm text-muted-foreground mb-4">{plot.sensores_count ?? 0} sensores instalados</p>
 
-              <div className="flex items-center justify-between text-xs border-t border-gray-100 pt-3">
-                <span className="text-gray-400">
+              <div className="flex items-center justify-between text-xs border-t border-border pt-3">
+                <span className="text-muted-foreground">
                   {plot.creado_en ? `Creada ${new Date(plot.creado_en).toLocaleDateString()}` : 'Sin fecha de creación'}
                 </span>
-                <span className="font-medium text-green-600 group-hover:translate-x-1 transition-transform inline-block">&rarr;</span>
+                <span className="font-medium text-green-600 dark:text-green-400 group-hover:translate-x-1 transition-transform inline-block">&rarr;</span>
               </div>
             </div>
           ))

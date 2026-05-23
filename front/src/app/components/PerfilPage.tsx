@@ -42,60 +42,60 @@ export const PerfilPage = () => {
 
   return (
     <div className="max-w-2xl mx-auto px-4 py-10 space-y-6">
-      <div 
-        className="flex items-center text-sm font-medium text-gray-500 hover:text-gray-900 mb-4 cursor-pointer w-fit" 
+      <div
+        className="flex items-center text-sm font-medium text-muted-foreground hover:text-foreground mb-4 cursor-pointer w-fit"
         onClick={() => navigate(-1)}
       >
         <ArrowLeft className="w-4 h-4 mr-1" />
         Volver
       </div>
-      <h1 className="text-2xl font-bold text-gray-900">Mi Perfil</h1>
+      <h1 className="text-2xl font-bold text-foreground">Mi Perfil</h1>
 
-      <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6 space-y-4">
+      <div className="bg-card rounded-xl border border-border shadow-sm p-6 space-y-4">
         <div className="flex items-center gap-2 mb-2">
           <User className="w-5 h-5 text-green-600" />
-          <h2 className="text-base font-semibold text-gray-800">Datos personales</h2>
+          <h2 className="text-base font-semibold text-foreground">Datos personales</h2>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
-            <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">Nombre</p>
-            <p className="mt-1 text-gray-900 font-medium">{user?.nombre}</p>
+            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Nombre</p>
+            <p className="mt-1 text-foreground font-medium">{user?.nombre}</p>
           </div>
           <div>
-            <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">Apellidos</p>
-            <p className="mt-1 text-gray-900 font-medium">{user?.apellidos}</p>
+            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Apellidos</p>
+            <p className="mt-1 text-foreground font-medium">{user?.apellidos}</p>
           </div>
           <div className="sm:col-span-2">
-            <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">Email</p>
-            <p className="mt-1 text-gray-900 font-medium">{user?.email}</p>
+            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Email</p>
+            <p className="mt-1 text-foreground font-medium">{user?.email}</p>
           </div>
         </div>
       </div>
 
-      <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
+      <div className="bg-card rounded-xl border border-border shadow-sm p-6">
         <div className="flex items-center gap-2 mb-4">
           <Lock className="w-5 h-5 text-green-600" />
-          <h2 className="text-base font-semibold text-gray-800">Cambiar contraseña</h2>
+          <h2 className="text-base font-semibold text-foreground">Cambiar contraseña</h2>
         </div>
         <form onSubmit={handleChangePassword} className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Nueva contraseña</label>
+            <label className="block text-sm font-medium text-foreground mb-1">Nueva contraseña</label>
             <input
               type="password"
               value={nuevaContrasena}
               onChange={e => setNuevaContrasena(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+              className="w-full px-3 py-2 border border-border rounded-lg text-sm bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
               placeholder="Mínimo 8 caracteres"
               required
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Confirmar contraseña</label>
+            <label className="block text-sm font-medium text-foreground mb-1">Confirmar contraseña</label>
             <input
               type="password"
               value={confirmarContrasena}
               onChange={e => setConfirmarContrasena(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+              className="w-full px-3 py-2 border border-border rounded-lg text-sm bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
               placeholder="Repite la nueva contraseña"
               required
             />

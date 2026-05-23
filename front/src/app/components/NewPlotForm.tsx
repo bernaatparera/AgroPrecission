@@ -60,18 +60,18 @@ export const NewPlotForm = () => {
   return (
     <div className="max-w-3xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
 
-      <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
-        <div className="p-8 border-b border-gray-200 bg-green-50/50">
+      <div className="bg-card rounded-2xl shadow-sm border border-border overflow-hidden">
+        <div className="p-8 border-b border-border bg-green-50/50 dark:bg-green-950/20">
           <div className="flex items-center space-x-3 mb-2">
             <img src="/pwa-icon.png" alt="Logo" className="w-10 h-10 object-contain" />
-            <h1 className="text-2xl font-bold text-gray-900">Nueva Parcela</h1>
+            <h1 className="text-2xl font-bold text-foreground">Nueva Parcela</h1>
           </div>
-          <p className="text-gray-500 mt-2">Configura las dimensiones de tu parcela y selecciona el cultivo.</p>
+          <p className="text-muted-foreground mt-2">Configura las dimensiones de tu parcela y selecciona el cultivo.</p>
         </div>
 
         <form onSubmit={handleSubmit} className="p-8 space-y-8">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-foreground mb-2">
               Nombre de la parcela
             </label>
             <input
@@ -80,17 +80,17 @@ export const NewPlotForm = () => {
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="Ej. Huerto Norte"
-              className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-colors"
+              className="w-full px-4 py-3 rounded-lg border border-border bg-background text-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-colors"
             />
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             <div className="space-y-6">
-              <h3 className="text-sm font-medium text-gray-700 border-b border-gray-200 pb-2">Dimensiones</h3>
+              <h3 className="text-sm font-medium text-foreground border-b border-border pb-2">Dimensiones</h3>
 
               <div className="flex items-center gap-4">
                 <div className="flex-1">
-                  <label className="block text-xs text-gray-500 mb-1">Ancho (X metros)</label>
+                  <label className="block text-xs text-muted-foreground mb-1">Ancho (X metros)</label>
                   <input
                     type="number"
                     min="1"
@@ -98,12 +98,12 @@ export const NewPlotForm = () => {
                     required
                     value={width}
                     onChange={(e) => setWidth(parseInt(e.target.value) || 1)}
-                    className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-colors"
+                    className="w-full px-4 py-2 rounded-lg border border-border bg-background text-foreground focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-colors"
                   />
                 </div>
-                <div className="text-gray-400 mt-5">✕</div>
+                <div className="text-muted-foreground mt-5">✕</div>
                 <div className="flex-1">
-                  <label className="block text-xs text-gray-500 mb-1">Largo (Y metros)</label>
+                  <label className="block text-xs text-muted-foreground mb-1">Largo (Y metros)</label>
                   <input
                     type="number"
                     min="1"
@@ -111,16 +111,16 @@ export const NewPlotForm = () => {
                     required
                     value={height}
                     onChange={(e) => setHeight(parseInt(e.target.value) || 1)}
-                    className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-colors"
+                    className="w-full px-4 py-2 rounded-lg border border-border bg-background text-foreground focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-colors"
                   />
                 </div>
               </div>
 
-              <div className="bg-blue-50 border border-blue-100 rounded-lg p-4 flex items-start gap-3">
+              <div className="bg-blue-50 dark:bg-blue-950/40 border border-blue-100 dark:border-blue-800 rounded-lg p-4 flex items-start gap-3">
                 <Maximize className="w-5 h-5 text-blue-500 mt-0.5 shrink-0" />
                 <div>
-                  <h4 className="text-sm font-medium text-blue-900">Recomendación de Sensores</h4>
-                  <p className="text-xs text-blue-700 mt-1">
+                  <h4 className="text-sm font-medium text-blue-900 dark:text-blue-300">Recomendación de Sensores</h4>
+                  <p className="text-xs text-blue-700 dark:text-blue-400 mt-1">
                     Con un área de {width * height} m², se recomienda instalar al menos <strong className="font-bold">{estimatedSensors} sensores</strong> para una cobertura óptima. Podrás añadirlos manualmente una vez creada la parcela.
                   </p>
                 </div>
@@ -128,7 +128,7 @@ export const NewPlotForm = () => {
             </div>
 
             <div className="space-y-6">
-              <h3 className="text-sm font-medium text-gray-700 border-b border-gray-200 pb-2">Tipo de Cultivo</h3>
+              <h3 className="text-sm font-medium text-foreground border-b border-border pb-2">Tipo de Cultivo</h3>
 
               <div className="flex flex-wrap gap-3">
                 {CROP_TYPES.map((crop) => (
@@ -139,8 +139,8 @@ export const NewPlotForm = () => {
                     className={twMerge(
                       "flex items-center px-4 py-2.5 rounded-full border text-sm font-medium transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500",
                       selectedCrop === crop.label
-                        ? "bg-green-50 border-green-500 text-green-700 shadow-sm"
-                        : "bg-white border-gray-200 text-gray-700 hover:border-green-300 hover:bg-green-50/50"
+                        ? "bg-green-50 dark:bg-green-900/40 border-green-500 text-green-700 dark:text-green-300 shadow-sm"
+                        : "bg-card border-border text-foreground hover:border-green-300 hover:bg-green-50/50 dark:hover:bg-green-900/20"
                     )}
                   >
                     <span className="mr-2 text-lg">{crop.icon}</span>
@@ -152,14 +152,14 @@ export const NewPlotForm = () => {
                 ))}
               </div>
               {selectedCrop === "Otro..." && (
-                <div className="mt-3 p-4 bg-gray-50 border border-gray-200 rounded-xl animate-in fade-in slide-in-from-top-2">
-                  <label className="block text-xs font-medium text-gray-600 mb-2">Escribe el nombre del cultivo:</label>
+                <div className="mt-3 p-4 bg-muted border border-border rounded-xl animate-in fade-in slide-in-from-top-2">
+                  <label className="block text-xs font-medium text-muted-foreground mb-2">Escribe el nombre del cultivo:</label>
                   <input
                     type="text"
                     placeholder="Ej. Pimiento, Berenjena, etc."
                     value={customCropValue}
                     onChange={(e) => setCustomCropValue(e.target.value)}
-                    className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-colors"
+                    className="w-full px-4 py-2 rounded-lg border border-border bg-background text-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-colors"
                     autoFocus
                   />
                 </div>
@@ -167,11 +167,11 @@ export const NewPlotForm = () => {
             </div>
           </div>
 
-          <div className="pt-6 border-t border-gray-200 flex justify-end">
+          <div className="pt-6 border-t border-border flex justify-end">
             <button
               type="button"
               onClick={() => navigate(`/farms/${farmId}`)}
-              className="mr-4 px-6 py-2.5 border border-gray-300 rounded-lg shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-colors"
+              className="mr-4 px-6 py-2.5 border border-border rounded-lg shadow-sm text-sm font-medium text-foreground bg-card hover:bg-accent focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-colors"
             >
               Cancelar
             </button>
