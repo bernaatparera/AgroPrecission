@@ -17,7 +17,7 @@ export const getFarmDashboard = async (id: string): Promise<FarmDashboardData> =
 
 // POST crear
 export const createFarm = async (data: CreateFarmRequest): Promise<Farm> => {
-  return apiRequest("/granjas", {
+  return apiRequest("/granjas/", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",

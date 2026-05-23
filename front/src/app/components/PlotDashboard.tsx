@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useTheme } from '../context/ThemeContext';
 import { useParams, useNavigate } from 'react-router';
 import { ArrowLeft, Droplet, Activity, RefreshCw, MapPin, Calendar, Cpu, Database, Layers, Plus, Edit3, Trash2 } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, BarChart, Bar } from 'recharts';
@@ -132,6 +133,12 @@ const formatNumericValue = (value: number) => {
 export const PlotDashboard = () => {
   const { farmId, plotId } = useParams<{ farmId: string; plotId: string }>();
   const navigate = useNavigate();
+  const { isDark } = useTheme();
+  const chartGridColor = isDark ? '#374151' : '#e5e7eb';
+  const chartTickColor = isDark ? '#9ca3af' : '#6b7280';
+  const chartTooltipStyle = isDark
+    ? { borderRadius: '0.5rem', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.4)', backgroundColor: '#1f2937', color: '#f9fafb' }
+    : { borderRadius: '0.5rem', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' };
 
   // Objetos de estado
   const [plot, setPlot] = useState<ParcelaRead | null>(null);
@@ -303,7 +310,7 @@ export const PlotDashboard = () => {
   }, [manualRecords]);
 
   if (loading) {
-    return <div className="p-8 text-center text-gray-500">Cargando parcela...</div>;
+    return <div className="p-8 text-center text-muted-foreground">Cargando parcela...</div>;
   }
 
   if (error) {
@@ -311,7 +318,7 @@ export const PlotDashboard = () => {
   }
 
   if (!plot) {
-    return <div className="p-8 text-center text-gray-500">Parcela no encontrada</div>;
+    return <div className="p-8 text-center text-muted-foreground">Parcela no encontrada</div>;
   }
 
   const totalMeasurements = measurementsResponse?.total ?? measurements.length;
@@ -557,7 +564,7 @@ export const PlotDashboard = () => {
         </div>
       )}
 
-      <div className="flex items-center text-sm font-medium text-gray-500 hover:text-gray-900 mb-8 cursor-pointer w-fit" onClick={handleBack}>
+      <div className="flex items-center text-sm font-medium text-muted-foreground hover:text-foreground mb-8 cursor-pointer w-fit" onClick={handleBack}>
         <ArrowLeft className="w-4 h-4 mr-1" />
         Volver a la granja
       </div>
@@ -565,19 +572,19 @@ export const PlotDashboard = () => {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
         <div>
           <div className="flex items-center space-x-3 mb-2">
-            <h1 className="text-3xl font-bold text-gray-900">{plot.nombre}</h1>
-            <Badge className="bg-green-100 text-green-800 hover:bg-green-100">
+            <h1 className="text-3xl font-bold text-foreground">{plot.nombre}</h1>
+            <Badge className="bg-green-100 dark:bg-green-900/40 text-green-800 dark:text-green-300 hover:bg-green-100">
               Parcela #{plot.id}
             </Badge>
             <button
               onClick={() => setIsEditingPlot(true)}
-              className="p-1.5 text-gray-400 hover:text-green-600 rounded-full hover:bg-green-50 transition-colors"
+              className="p-1.5 text-muted-foreground hover:text-green-600 rounded-full hover:bg-green-50 dark:hover:bg-green-900/30 transition-colors"
               title="Editar Parcela"
             >
               <Edit3 className="w-5 h-5" />
             </button>
           </div>
-          <p className="mt-1 text-sm text-gray-500">
+          <p className="mt-1 text-sm text-muted-foreground">
             Cuadricula {plot.tamx}x{plot.tamy} | Granja {plot.granja_id} | {installedSensors} sensores instalados
           </p>
         </div>
@@ -588,11 +595,11 @@ export const PlotDashboard = () => {
             onClick={() => (isPolling ? stopPolling() : startPolling())}
             className={`inline-flex items-center px-3 py-2 border rounded-lg text-sm font-medium transition-colors ${
               isPolling
-                ? 'border-green-300 bg-green-50 text-green-700 hover:bg-green-100'
-                : 'border-gray-300 bg-white text-gray-600 hover:bg-gray-50'
+                ? 'border-green-300 bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-300 hover:bg-green-100 dark:hover:bg-green-900/50'
+                : 'border-border bg-card text-muted-foreground hover:bg-accent'
             }`}
           >
-            <span className={`w-2 h-2 rounded-full mr-2 ${isPolling ? 'bg-green-500 animate-pulse' : 'bg-gray-400'}`} />
+            <span className={`w-2 h-2 rounded-full mr-2 ${isPolling ? 'bg-green-500 animate-pulse' : 'bg-muted-foreground'}`} />
             {isPolling ? 'En vivo' : 'Pausado'}
           </button>
           <button
@@ -607,7 +614,7 @@ export const PlotDashboard = () => {
       </div>
 
       {sensorActionMessage && (
-        <div className="mb-6 rounded-xl border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-800">
+        <div className="mb-6 rounded-xl border border-green-200 dark:border-green-800 bg-green-50 dark:bg-green-900/30 px-4 py-3 text-sm text-green-800 dark:text-green-300">
           {sensorActionMessage}
         </div>
       )}
@@ -620,7 +627,7 @@ export const PlotDashboard = () => {
           </CardHeader>
           <CardContent>
             <div className="text-2xl">{totalMeasurements}</div>
-            <p className="text-xs text-gray-500 mt-1">{measurements.length} cargadas en esta vista</p>
+            <p className="text-xs text-muted-foreground mt-1">{measurements.length} cargadas en esta vista</p>
           </CardContent>
         </Card>
 
@@ -631,7 +638,7 @@ export const PlotDashboard = () => {
           </CardHeader>
           <CardContent>
             <div className="text-2xl">{installedSensors}</div>
-            <p className="text-xs text-gray-500 mt-1">{sensorsWithMeasurements} con mediciones</p>
+            <p className="text-xs text-muted-foreground mt-1">{sensorsWithMeasurements} con mediciones</p>
           </CardContent>
         </Card>
 
@@ -642,7 +649,7 @@ export const PlotDashboard = () => {
           </CardHeader>
           <CardContent>
             <div className="text-2xl">{variables.length}</div>
-            <p className="text-xs text-gray-500 mt-1">
+            <p className="text-xs text-muted-foreground mt-1">
               {variables.length > 0 ? variables.join(', ') : 'Sin variables todavia'}
             </p>
           </CardContent>
@@ -655,17 +662,17 @@ export const PlotDashboard = () => {
           </CardHeader>
           <CardContent>
             <div className="text-2xl">{totalArea} m2</div>
-            <p className="text-xs text-gray-500 mt-1">{plot.tamx}x{plot.tamy}</p>
+            <p className="text-xs text-muted-foreground mt-1">{plot.tamx}x{plot.tamy}</p>
           </CardContent>
         </Card>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8 lg:h-[calc(100vh-8rem)] lg:min-h-[600px]">
-        <div className="col-span-1 lg:col-span-2 bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden flex flex-col h-full">
-          <div className="p-6 border-b border-gray-100 bg-gray-50 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
+        <div className="col-span-1 lg:col-span-2 bg-card rounded-xl shadow-sm border border-border overflow-hidden flex flex-col h-full">
+          <div className="p-6 border-b border-border bg-muted flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
             <div>
-              <h2 className="text-lg font-semibold text-gray-900">Mapa de la Parcela</h2>
-              <p className="text-xs text-gray-500 mt-1">
+              <h2 className="text-lg font-semibold text-foreground">Mapa de la Parcela</h2>
+              <p className="text-xs text-muted-foreground mt-1">
                 {cells.length} casillas registradas | {measuredCells} casillas con mediciones
               </p>
             </div>
@@ -714,81 +721,77 @@ export const PlotDashboard = () => {
           </div>
         </div>
 
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 h-full overflow-y-auto custom-scrollbar">
-          <h3 className="text-lg font-semibold text-gray-900 mb-6">Resumen de la Parcela</h3>
+        <div className="bg-card rounded-xl shadow-sm border border-border p-6 h-full overflow-y-auto custom-scrollbar">
+          <h3 className="text-lg font-semibold text-foreground mb-6">Resumen de la Parcela</h3>
 
           <div className="space-y-4">
             <div>
-              <p className="text-sm text-gray-600 mb-1">Nombre:</p>
-              <p className="font-medium text-lg">{plot.nombre}</p>
+              <p className="text-sm text-muted-foreground mb-1">Nombre:</p>
+              <p className="font-medium text-lg text-foreground">{plot.nombre}</p>
             </div>
 
             <div>
-              <p className="text-sm text-gray-600 mb-2">Ids relacionados:</p>
+              <p className="text-sm text-muted-foreground mb-2">Ids relacionados:</p>
               <div className="flex flex-wrap gap-2">
-                <Badge className="bg-slate-100 text-slate-700 hover:bg-slate-100">
-                  Parcela {plot.id}
-                </Badge>
-                <Badge className="bg-slate-100 text-slate-700 hover:bg-slate-100">
-                  Granja {plot.granja_id}
-                </Badge>
+                <Badge className="bg-muted text-foreground hover:bg-muted">Parcela {plot.id}</Badge>
+                <Badge className="bg-muted text-foreground hover:bg-muted">Granja {plot.granja_id}</Badge>
               </div>
             </div>
 
             <div>
-              <p className="text-sm text-gray-600 mb-2">Dimensiones:</p>
-              <p className="font-medium">{plot.tamx} x {plot.tamy}</p>
+              <p className="text-sm text-muted-foreground mb-2">Dimensiones:</p>
+              <p className="font-medium text-foreground">{plot.tamx} x {plot.tamy}</p>
             </div>
 
-            <div className="pt-3 border-t border-gray-200">
-              <div className="flex items-center justify-between p-4 rounded-lg bg-blue-50 border border-blue-100">
+            <div className="pt-3 border-t border-border">
+              <div className="flex items-center justify-between p-4 rounded-lg bg-blue-50 dark:bg-blue-950/40 border border-blue-100 dark:border-blue-800">
                 <div className="flex items-center">
                   <Droplet className="w-6 h-6 text-blue-500 mr-3" />
-                  <span className="text-sm font-medium text-blue-900">Humedad mas reciente</span>
+                  <span className="text-sm font-medium text-blue-900 dark:text-blue-300">Humedad mas reciente</span>
                 </div>
-                <span className="text-xl font-bold text-blue-700">
+                <span className="text-xl font-bold text-blue-700 dark:text-blue-400">
                   {latestHumidity ? `${formatNumericValue(latestHumidity.valor)}%` : 'Sin dato'}
                 </span>
               </div>
 
-              <div className="flex items-center justify-between p-4 rounded-lg bg-orange-50 border border-orange-100 mt-3">
+              <div className="flex items-center justify-between p-4 rounded-lg bg-orange-50 dark:bg-orange-950/40 border border-orange-100 dark:border-orange-800 mt-3">
                 <div className="flex items-center">
                   <Activity className="w-6 h-6 text-orange-500 mr-3" />
-                  <span className="text-sm font-medium text-orange-900">Temperatura mas reciente</span>
+                  <span className="text-sm font-medium text-orange-900 dark:text-orange-300">Temperatura mas reciente</span>
                 </div>
-                <span className="text-xl font-bold text-orange-700">
+                <span className="text-xl font-bold text-orange-700 dark:text-orange-400">
                   {latestTemperature ? `${formatNumericValue(latestTemperature.valor)} C` : 'Sin dato'}
                 </span>
               </div>
             </div>
 
-            <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+            <div className="rounded-lg border border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-950/40 px-4 py-3 text-sm text-amber-800 dark:text-amber-300">
               La relacion visual sigue siendo aproximada: esta vista usa las coordenadas del grid y crea o reutiliza una casilla del backend para enlazar el sensor con la posicion elegida.
             </div>
           </div>
 
-          <div className="mt-6 pt-6 border-t border-gray-200">
-            <h4 className="font-semibold mb-4 text-sm">Celda seleccionada</h4>
+          <div className="mt-6 pt-6 border-t border-border">
+            <h4 className="font-semibold mb-4 text-sm text-foreground">Celda seleccionada</h4>
 
             {selectedCell ? (
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
-                  <span className="text-gray-600 text-sm">Posicion:</span>
-                  <Badge className="bg-blue-100 text-blue-700 hover:bg-blue-100">
+                  <span className="text-muted-foreground text-sm">Posicion:</span>
+                  <Badge className="bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 hover:bg-blue-100">
                     ({selectedCell.x}, {selectedCell.y})
                   </Badge>
                 </div>
 
                 <div className="flex items-center justify-between">
-                  <span className="text-gray-600 text-sm">Casilla backend:</span>
-                  <Badge className={selectedCellBackend ? "bg-green-100 text-green-700 hover:bg-green-100" : "bg-slate-100 text-slate-700 hover:bg-slate-100"}>
+                  <span className="text-muted-foreground text-sm">Casilla backend:</span>
+                  <Badge className={selectedCellBackend ? "bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-300 hover:bg-green-100" : "bg-muted text-foreground hover:bg-muted"}>
                     {selectedCellBackend ? `#${selectedCellBackend.id}` : 'Se creara al guardar'}
                   </Badge>
                 </div>
 
                 <div className="flex items-center justify-between">
-                  <span className="text-gray-600 text-sm">Sensores en la celda:</span>
-                  <Badge className="bg-purple-100 text-purple-700 hover:bg-purple-100">
+                  <span className="text-muted-foreground text-sm">Sensores en la celda:</span>
+                  <Badge className="bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-purple-300 hover:bg-purple-100">
                     {selectedCellSensors.length}
                   </Badge>
                 </div>
@@ -796,9 +799,9 @@ export const PlotDashboard = () => {
                 {selectedCellSensors.length > 0 && (
                   <div className="space-y-2">
                     {selectedCellSensors.map((sensor) => (
-                      <div key={sensor.id} className="rounded-lg border border-gray-200 px-3 py-2">
-                        <p className="text-sm font-medium text-gray-900">{sensor.numref}</p>
-                        <p className="text-xs text-gray-500">
+                      <div key={sensor.id} className="rounded-lg border border-border bg-muted/50 px-3 py-2">
+                        <p className="text-sm font-medium text-foreground">{sensor.numref}</p>
+                        <p className="text-xs text-muted-foreground">
                           {sensor.tipo}{sensor.fabricante ? ` | ${sensor.fabricante}` : ''}
                         </p>
                       </div>
@@ -817,26 +820,26 @@ export const PlotDashboard = () => {
                 {selectedCellSensors.length > 0 && (
                   <button
                     onClick={() => setIsDeleteSensorDialogOpen(true)}
-                    className="w-full inline-flex items-center justify-center px-4 py-2.5 rounded-lg bg-red-50 text-red-700 font-medium hover:bg-red-100 border border-red-200"
+                    className="w-full inline-flex items-center justify-center px-4 py-2.5 rounded-lg bg-red-50 dark:bg-red-950/40 text-red-700 dark:text-red-400 font-medium hover:bg-red-100 dark:hover:bg-red-950/60 border border-red-200 dark:border-red-800"
                   >
                     <Trash2 className="w-4 h-4 mr-2" />
                     Eliminar sensor
                   </button>
                 )}
                 {selectedCellRecords.length > 0 && (
-                  <div className="mt-4 pt-4 border-t border-gray-100 space-y-2">
-                    <h5 className="text-sm font-semibold text-gray-700">Observaciones:</h5>
+                  <div className="mt-4 pt-4 border-t border-border space-y-2">
+                    <h5 className="text-sm font-semibold text-foreground">Observaciones:</h5>
                     {selectedCellRecords.map((record) => (
-                      <div key={record.id} className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2">
+                      <div key={record.id} className="rounded-lg border border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-950/40 px-3 py-2">
                         <div className="flex items-center justify-between mb-1">
-                          <span className="text-xs text-amber-800 font-medium">{formatMeasurementDate(record.dia_hora)}</span>
+                          <span className="text-xs text-amber-800 dark:text-amber-300 font-medium">{formatMeasurementDate(record.dia_hora)}</span>
                           {record.puntuacion && (
-                            <span className="text-xs bg-amber-200 text-amber-800 px-1.5 py-0.5 rounded-full font-bold">
+                            <span className="text-xs bg-amber-200 dark:bg-amber-800 text-amber-800 dark:text-amber-200 px-1.5 py-0.5 rounded-full font-bold">
                               {record.puntuacion}/5 ★
                             </span>
                           )}
                         </div>
-                        {record.descripcion && <p className="text-sm text-gray-700">{record.descripcion}</p>}
+                        {record.descripcion && <p className="text-sm text-foreground">{record.descripcion}</p>}
                       </div>
                     ))}
                   </div>
@@ -844,47 +847,47 @@ export const PlotDashboard = () => {
 
                 <button
                   onClick={() => setIsRecordDialogOpen(true)}
-                  className="w-full inline-flex items-center justify-center px-4 py-2.5 rounded-lg bg-amber-100 text-amber-700 font-medium hover:bg-amber-200 border border-amber-300 mt-2"
+                  className="w-full inline-flex items-center justify-center px-4 py-2.5 rounded-lg bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 font-medium hover:bg-amber-200 dark:hover:bg-amber-900/50 border border-amber-300 dark:border-amber-700 mt-2"
                 >
                   <Edit3 className="w-4 h-4 mr-2" />
                   Añadir observación
                 </button>
               </div>
             ) : (
-              <div className="rounded-lg border border-dashed border-gray-200 bg-gray-50 px-4 py-6 text-sm text-gray-500 text-center">
+              <div className="rounded-lg border border-dashed border-border bg-muted px-4 py-6 text-sm text-muted-foreground text-center">
                 Selecciona una celda para ver sus sensores o crear uno nuevo.
               </div>
             )}
           </div>
 
-          <div className="mt-6 pt-6 border-t border-gray-200">
-            <h4 className="font-semibold mb-4 text-sm">Estado actual</h4>
+          <div className="mt-6 pt-6 border-t border-border">
+            <h4 className="font-semibold mb-4 text-sm text-foreground">Estado actual</h4>
             <div className="space-y-3 text-sm">
               <div className="flex justify-between items-center">
-                <span className="text-gray-600">Casillas registradas:</span>
-                <span className="font-bold text-gray-900">{cells.length}</span>
+                <span className="text-muted-foreground">Casillas registradas:</span>
+                <span className="font-bold text-foreground">{cells.length}</span>
               </div>
               <div className="flex justify-between items-center">
-                <span className="text-gray-600">Ultima lectura:</span>
-                <Badge className="bg-green-100 text-green-700 hover:bg-green-100">
+                <span className="text-muted-foreground">Ultima lectura:</span>
+                <Badge className="bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-300 hover:bg-green-100">
                   {lastMeasurement ? formatMeasurementDate(lastMeasurement.dia_hora) : 'Sin datos'}
                 </Badge>
               </div>
               <div className="flex justify-between items-center">
-                <span className="text-gray-600">Pagina recibida:</span>
-                <Badge className="bg-blue-100 text-blue-700 hover:bg-blue-100">
+                <span className="text-muted-foreground">Pagina recibida:</span>
+                <Badge className="bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 hover:bg-blue-100">
                   {measurementsResponse ? measurementsResponse.page : 0}
                 </Badge>
               </div>
               <div className="flex justify-between items-center">
-                <span className="text-gray-600">Modo alta sensor:</span>
-                <Badge className={isAddingSensor ? "bg-purple-100 text-purple-700 hover:bg-purple-100" : "bg-slate-100 text-slate-700 hover:bg-slate-100"}>
+                <span className="text-muted-foreground">Modo alta sensor:</span>
+                <Badge className={isAddingSensor ? "bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-purple-300 hover:bg-purple-100" : "bg-muted text-foreground hover:bg-muted"}>
                   {isAddingSensor ? 'Activo' : 'Inactivo'}
                 </Badge>
               </div>
               <div className="flex justify-between items-center">
-                <span className="text-gray-600">Actualizacion automatica:</span>
-                <Badge className={isPolling ? "bg-green-100 text-green-700 hover:bg-green-100" : "bg-slate-100 text-slate-700 hover:bg-slate-100"}>
+                <span className="text-muted-foreground">Actualizacion automatica:</span>
+                <Badge className={isPolling ? "bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-300 hover:bg-green-100" : "bg-muted text-foreground hover:bg-muted"}>
                   {isPolling ? `Cada ${POLLING_INTERVAL_MS / 1000}s` : 'Pausada'}
                 </Badge>
               </div>
@@ -893,58 +896,56 @@ export const PlotDashboard = () => {
         </div>
       </div>
 
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-8">
-        <h3 className="text-lg font-semibold text-gray-900 mb-6">Tendencia de Mediciones</h3>
+      <div className="bg-card rounded-xl shadow-sm border border-border p-6 mb-8">
+        <h3 className="text-lg font-semibold text-foreground mb-6">Tendencia de Mediciones</h3>
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2 h-80">
             {trendData.length > 0 ? (
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={trendData}>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e5e7eb" />
-                  <XAxis dataKey="time" axisLine={false} tickLine={false} tick={{ fill: '#6b7280', fontSize: 12 }} dy={10} />
-                  <YAxis yAxisId="left" axisLine={false} tickLine={false} tick={{ fill: '#6b7280', fontSize: 12 }} dx={-10} />
-                  <YAxis yAxisId="right" orientation="right" axisLine={false} tickLine={false} tick={{ fill: '#6b7280', fontSize: 12 }} dx={10} />
-                  <RechartsTooltip
-                    contentStyle={{ borderRadius: '0.5rem', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
-                  />
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={chartGridColor} />
+                  <XAxis dataKey="time" axisLine={false} tickLine={false} tick={{ fill: chartTickColor, fontSize: 12 }} dy={10} />
+                  <YAxis yAxisId="left" axisLine={false} tickLine={false} tick={{ fill: chartTickColor, fontSize: 12 }} dx={-10} />
+                  <YAxis yAxisId="right" orientation="right" axisLine={false} tickLine={false} tick={{ fill: chartTickColor, fontSize: 12 }} dx={10} />
+                  <RechartsTooltip contentStyle={chartTooltipStyle} />
                   <Line yAxisId="left" type="monotone" dataKey="humedad" stroke="#3b82f6" strokeWidth={3} dot={false} name="Humedad" />
                   <Line yAxisId="right" type="monotone" dataKey="temperatura" stroke="#f97316" strokeWidth={3} dot={false} name="Temperatura" />
                 </LineChart>
               </ResponsiveContainer>
             ) : (
-              <div className="h-full rounded-xl border border-dashed border-gray-200 bg-gray-50 flex items-center justify-center text-sm text-gray-500">
+              <div className="h-full rounded-xl border border-dashed border-border bg-muted flex items-center justify-center text-sm text-muted-foreground">
                 Aun no hay mediciones suficientes para pintar la tendencia.
               </div>
             )}
           </div>
 
           <div className="space-y-4">
-            <div className="flex items-center justify-between p-4 rounded-lg bg-blue-50 border border-blue-100">
+            <div className="flex items-center justify-between p-4 rounded-lg bg-blue-50 dark:bg-blue-950/40 border border-blue-100 dark:border-blue-800">
               <div className="flex items-center">
                 <Droplet className="w-6 h-6 text-blue-500 mr-3" />
-                <span className="text-sm font-medium text-blue-900">Humedad actual</span>
+                <span className="text-sm font-medium text-blue-900 dark:text-blue-300">Humedad actual</span>
               </div>
-              <span className="text-2xl font-bold text-blue-700">
+              <span className="text-2xl font-bold text-blue-700 dark:text-blue-400">
                 {latestHumidity ? `${formatNumericValue(latestHumidity.valor)}%` : '--'}
               </span>
             </div>
 
-            <div className="flex items-center justify-between p-4 rounded-lg bg-orange-50 border border-orange-100">
+            <div className="flex items-center justify-between p-4 rounded-lg bg-orange-50 dark:bg-orange-950/40 border border-orange-100 dark:border-orange-800">
               <div className="flex items-center">
                 <Activity className="w-6 h-6 text-orange-500 mr-3" />
-                <span className="text-sm font-medium text-orange-900">Temp. actual</span>
+                <span className="text-sm font-medium text-orange-900 dark:text-orange-300">Temp. actual</span>
               </div>
-              <span className="text-2xl font-bold text-orange-700">
+              <span className="text-2xl font-bold text-orange-700 dark:text-orange-400">
                 {latestTemperature ? `${formatNumericValue(latestTemperature.valor)} C` : '--'}
               </span>
             </div>
 
-            <div className="flex items-center justify-between p-4 rounded-lg bg-slate-50 border border-slate-200">
+            <div className="flex items-center justify-between p-4 rounded-lg bg-muted border border-border">
               <div className="flex items-center">
-                <Calendar className="w-6 h-6 text-slate-500 mr-3" />
-                <span className="text-sm font-medium text-slate-900">Ultima actualizacion</span>
+                <Calendar className="w-6 h-6 text-muted-foreground mr-3" />
+                <span className="text-sm font-medium text-foreground">Ultima actualizacion</span>
               </div>
-              <span className="text-sm font-semibold text-slate-700 text-right">
+              <span className="text-sm font-semibold text-muted-foreground text-right">
                 {lastMeasurement
                   ? formatMeasurementDate(lastMeasurement.dia_hora, {
                       day: '2-digit',
@@ -969,15 +970,15 @@ export const PlotDashboard = () => {
             {variableAverageData.length > 0 ? (
               <ResponsiveContainer width="100%" height={300}>
                 <BarChart data={variableAverageData}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="name" />
-                  <YAxis />
-                  <RechartsTooltip />
+                  <CartesianGrid strokeDasharray="3 3" stroke={chartGridColor} />
+                  <XAxis dataKey="name" tick={{ fill: chartTickColor }} />
+                  <YAxis tick={{ fill: chartTickColor }} />
+                  <RechartsTooltip contentStyle={chartTooltipStyle} />
                   <Bar dataKey="promedio" fill="#16a34a" name="Valor medio" />
                 </BarChart>
               </ResponsiveContainer>
             ) : (
-              <div className="h-[300px] rounded-xl border border-dashed border-gray-200 bg-gray-50 flex items-center justify-center text-sm text-gray-500">
+              <div className="h-[300px] rounded-xl border border-dashed border-border bg-muted flex items-center justify-center text-sm text-muted-foreground">
                 No hay suficientes datos para calcular promedios.
               </div>
             )}
@@ -994,23 +995,23 @@ export const PlotDashboard = () => {
                 {measurementsByNewest.slice(0, 8).map((measurement) => (
                   <div
                     key={measurement.id}
-                    className="rounded-lg border border-gray-200 p-4 flex items-start justify-between gap-4"
+                    className="rounded-lg border border-border bg-muted/40 p-4 flex items-start justify-between gap-4"
                   >
                     <div>
-                      <p className="font-medium text-gray-900">{measurement.variable}</p>
-                      <p className="text-sm text-gray-500">
+                      <p className="font-medium text-foreground">{measurement.variable}</p>
+                      <p className="text-sm text-muted-foreground">
                         Sensor {measurement.sensor_id} | Casilla {measurement.casilla_id}
                       </p>
-                      <p className="text-xs text-gray-400 mt-1">{formatMeasurementDate(measurement.dia_hora)}</p>
+                      <p className="text-xs text-muted-foreground mt-1">{formatMeasurementDate(measurement.dia_hora)}</p>
                     </div>
-                    <Badge className="bg-green-100 text-green-800 hover:bg-green-100">
+                    <Badge className="bg-green-100 dark:bg-green-900/40 text-green-800 dark:text-green-300 hover:bg-green-100">
                       {formatNumericValue(measurement.valor)}
                     </Badge>
                   </div>
                 ))}
               </div>
             ) : (
-              <div className="h-[300px] rounded-xl border border-dashed border-gray-200 bg-gray-50 flex items-center justify-center text-sm text-gray-500">
+              <div className="h-[300px] rounded-xl border border-dashed border-border bg-muted flex items-center justify-center text-sm text-muted-foreground">
                 Aun no hay mediciones registradas para esta parcela.
               </div>
             )}
@@ -1034,17 +1035,17 @@ export const PlotDashboard = () => {
 
           <div className="space-y-2 py-2">
             {selectedCellSensors.map((sensor) => (
-              <div key={sensor.id} className="flex items-center justify-between rounded-lg border border-gray-200 px-3 py-2">
+              <div key={sensor.id} className="flex items-center justify-between rounded-lg border border-border bg-muted/40 px-3 py-2">
                 <div>
-                  <p className="text-sm font-medium text-gray-900">{sensor.numref}</p>
-                  <p className="text-xs text-gray-500">
+                  <p className="text-sm font-medium text-foreground">{sensor.numref}</p>
+                  <p className="text-xs text-muted-foreground">
                     {sensor.tipo}{sensor.fabricante ? ` | ${sensor.fabricante}` : ''}
                   </p>
                 </div>
                 <button
                   onClick={() => void handleDeleteSensor(sensor.id)}
                   disabled={isDeletingSensorId === sensor.id}
-                  className="inline-flex items-center gap-1.5 rounded-lg bg-red-50 px-3 py-1.5 text-sm font-medium text-red-700 hover:bg-red-100 disabled:opacity-50 disabled:cursor-not-allowed border border-red-200"
+                  className="inline-flex items-center gap-1.5 rounded-lg bg-red-50 dark:bg-red-950/40 px-3 py-1.5 text-sm font-medium text-red-700 dark:text-red-400 hover:bg-red-100 disabled:opacity-50 disabled:cursor-not-allowed border border-red-200 dark:border-red-800"
                 >
                   <Trash2 className="w-3.5 h-3.5" />
                   {isDeletingSensorId === sensor.id ? 'Eliminando...' : 'Eliminar'}
@@ -1057,7 +1058,7 @@ export const PlotDashboard = () => {
             <button
               type="button"
               onClick={() => setIsDeleteSensorDialogOpen(false)}
-              className="inline-flex items-center justify-center rounded-lg border border-gray-200 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+              className="inline-flex items-center justify-center rounded-lg border border-border px-4 py-2 text-sm font-medium text-foreground hover:bg-accent"
             >
               Cerrar
             </button>
@@ -1086,7 +1087,7 @@ export const PlotDashboard = () => {
 
           <form onSubmit={handleCreateSensor} className="space-y-4">
             <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-700" htmlFor="sensor-numref">
+              <label className="text-sm font-medium text-foreground" htmlFor="sensor-numref">
                 Referencia
               </label>
               <Input
@@ -1100,7 +1101,7 @@ export const PlotDashboard = () => {
             </div>
 
             <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-700" htmlFor="sensor-fabricante">
+              <label className="text-sm font-medium text-foreground" htmlFor="sensor-fabricante">
                 Fabricante
               </label>
               <Input
@@ -1113,7 +1114,7 @@ export const PlotDashboard = () => {
             </div>
 
             <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-700" htmlFor="sensor-tipo">
+              <label className="text-sm font-medium text-foreground" htmlFor="sensor-tipo">
                 Tipo
               </label>
               <Select
@@ -1134,7 +1135,7 @@ export const PlotDashboard = () => {
             </div>
 
             {selectedCell && (
-              <div className="rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700">
+              <div className="rounded-lg border border-border bg-muted px-4 py-3 text-sm text-muted-foreground">
                 <p>Posicion elegida: ({selectedCell.x}, {selectedCell.y})</p>
                 <p>
                   Casilla backend: {selectedCellBackend ? `#${selectedCellBackend.id}` : 'se creara automaticamente'}
@@ -1186,7 +1187,7 @@ export const PlotDashboard = () => {
 
           <form onSubmit={handleCreateRecord} className="space-y-4">
             <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-700" htmlFor="record-puntuacion">
+              <label className="text-sm font-medium text-foreground" htmlFor="record-puntuacion">
                 Puntuación (1 a 5)
               </label>
               <Select
@@ -1207,7 +1208,7 @@ export const PlotDashboard = () => {
             </div>
 
             <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-700" htmlFor="record-descripcion">
+              <label className="text-sm font-medium text-foreground" htmlFor="record-descripcion">
                 Comentarios
               </label>
               <Input
