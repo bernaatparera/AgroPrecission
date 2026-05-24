@@ -13,12 +13,17 @@ from __future__ import annotations
 
 import random
 import sys
+import os
 from dataclasses import dataclass
 from datetime import datetime, timedelta, UTC
 
 import requests
 
-API_URL = "http://localhost:8000/api/v1"
+API_URL = os.getenv("API_URL", "http://localhost:8000/api/v1")
+DEMO_EMAIL = os.getenv("SETUP_DEMO_EMAIL", "demo@agroprecision.local")
+DEMO_PASSWORD = os.getenv("SETUP_DEMO_PASSWORD", "DemoPass123")
+DEMO_NOMBRE = os.getenv("SETUP_DEMO_NOMBRE", "Demo")
+DEMO_APELLIDOS = os.getenv("SETUP_DEMO_APELLIDOS", "AgroPrecision")
 
 
 @dataclass
@@ -39,8 +44,52 @@ def _safe_get_json(response: requests.Response):
         return None
 
 
+def _authenticate(session: requests.Session) -> None:
+    register_payload = {
+        "username": DEMO_EMAIL,
+        "password": DEMO_PASSWORD,
+        "nombre": DEMO_NOMBRE,
+        "apellidos": DEMO_APELLIDOS,
+    }
+    register_resp = session.post(f"{API_URL}/auth/register", json=register_payload, timeout=20)
+    if _request_ok(register_resp, 201):
+        print(f"[OK] Usuario demo creado: {DEMO_EMAIL}")
+    elif register_resp.status_code == 409:
+        print(f"[INFO] Usando usuario demo existente: {DEMO_EMAIL}")
+    else:
+        raise RuntimeError(
+            f"No se pudo preparar el usuario demo: {register_resp.status_code} - {register_resp.text}"
+        )
+
+    login_resp = session.post(
+        f"{API_URL}/auth/login",
+        data={"username": DEMO_EMAIL, "password": DEMO_PASSWORD},
+        headers={"Content-Type": "application/x-www-form-urlencoded"},
+        timeout=20,
+    )
+    if not _request_ok(login_resp, 200):
+        raise RuntimeError(
+            f"No se pudo iniciar sesion con {DEMO_EMAIL}: {login_resp.status_code} - {login_resp.text}. "
+            "Si el usuario ya existia con otra contrasena, define SETUP_DEMO_EMAIL y SETUP_DEMO_PASSWORD."
+        )
+
+    token = login_resp.json()["access_token"]
+    session.headers.update({"Authorization": f"Bearer {token}"})
+    print("[OK] Sesion autenticada para crear datos demo")
+
+
 def _create_or_get_demo_farm(session: requests.Session) -> int:
     farm_name = "Granja Demo Visual"
+    farms_resp = session.get(f"{API_URL}/granjas/?limit=500", timeout=20)
+    if not _request_ok(farms_resp, 200):
+        raise RuntimeError(f"No se pudo consultar granjas: {farms_resp.status_code} - {farms_resp.text}")
+
+    existing_farms = sorted(farms_resp.json(), key=lambda farm: farm["id"])
+    for farm in existing_farms:
+        if farm.get("nombre") == farm_name:
+            print(f"[INFO] Usando granja existente: {farm['id']}")
+            return farm["id"]
+
     response = session.post(
         f"{API_URL}/granjas/",
         json={"nombre": farm_name, "ubicacion_geo": "40.4168,-3.7038"},
@@ -50,15 +99,6 @@ def _create_or_get_demo_farm(session: requests.Session) -> int:
         farm_id = response.json()["id"]
         print(f"[OK] Granja creada: {farm_id}")
         return farm_id
-
-    farms_resp = session.get(f"{API_URL}/granjas/?limit=500", timeout=20)
-    if not _request_ok(farms_resp, 200):
-        raise RuntimeError(f"No se pudo consultar granjas: {farms_resp.status_code} - {farms_resp.text}")
-
-    for farm in farms_resp.json():
-        if farm.get("nombre") == farm_name:
-            print(f"[INFO] Usando granja existente: {farm['id']}")
-            return farm["id"]
 
     raise RuntimeError(f"No se pudo crear ni encontrar la granja demo: {response.status_code} - {response.text}")
 
@@ -123,6 +163,14 @@ def _create_or_get_plot(
     tamy: int,
     tipo_cultivo_id: int | None,
 ) -> int:
+    list_resp = session.get(f"{API_URL}/parcelas/?granja_id={farm_id}&limit=500", timeout=20)
+    if not _request_ok(list_resp, 200):
+        raise RuntimeError(f"No se pudo consultar parcelas: {list_resp.status_code} - {list_resp.text}")
+
+    for plot in sorted(list_resp.json(), key=lambda item: item["id"]):
+        if plot.get("nombre") == plot_name:
+            return plot["id"]
+
     payload = {
         "granja_id": farm_id,
         "nombre": plot_name,
@@ -134,18 +182,18 @@ def _create_or_get_plot(
     if _request_ok(response, 201):
         return response.json()["id"]
 
-    list_resp = session.get(f"{API_URL}/parcelas/?granja_id={farm_id}&limit=500", timeout=20)
-    if not _request_ok(list_resp, 200):
-        raise RuntimeError(f"No se pudo consultar parcelas: {list_resp.status_code} - {list_resp.text}")
-
-    for plot in list_resp.json():
-        if plot.get("nombre") == plot_name:
-            return plot["id"]
-
     raise RuntimeError(f"No se pudo crear ni encontrar parcela {plot_name}: {response.status_code} - {response.text}")
 
 
 def _ensure_cell(session: requests.Session, parcela_id: int, posx: int, posy: int) -> int:
+    cells_resp = session.get(f"{API_URL}/casillas/?parcela_id={parcela_id}&limit=1000", timeout=20)
+    if not _request_ok(cells_resp, 200):
+        raise RuntimeError(f"No se pudo consultar casillas: {cells_resp.status_code} - {cells_resp.text}")
+
+    for cell in sorted(cells_resp.json(), key=lambda item: item["id"]):
+        if cell["posx"] == posx and cell["posy"] == posy:
+            return cell["id"]
+
     response = session.post(
         f"{API_URL}/casillas/",
         json={"parcela_id": parcela_id, "posx": posx, "posy": posy, "estado": "LISTO"},
@@ -154,14 +202,6 @@ def _ensure_cell(session: requests.Session, parcela_id: int, posx: int, posy: in
     if _request_ok(response, 201):
         return response.json()["id"]
 
-    cells_resp = session.get(f"{API_URL}/casillas/?parcela_id={parcela_id}&limit=2000", timeout=20)
-    if not _request_ok(cells_resp, 200):
-        raise RuntimeError(f"No se pudo consultar casillas: {cells_resp.status_code} - {cells_resp.text}")
-
-    for cell in cells_resp.json():
-        if cell["posx"] == posx and cell["posy"] == posy:
-            return cell["id"]
-
     raise RuntimeError(
         f"No se pudo crear ni encontrar casilla ({posx},{posy}) en parcela {parcela_id}: "
         f"{response.status_code} - {response.text}"
@@ -169,18 +209,18 @@ def _ensure_cell(session: requests.Session, parcela_id: int, posx: int, posy: in
 
 
 def _ensure_sensor(session: requests.Session, casilla_id: int, numref: str, tipo: str, fabricante: str) -> int:
-    payload = {"casilla_id": casilla_id, "numref": numref, "tipo": tipo, "fabricante": fabricante}
-    response = session.post(f"{API_URL}/sensores/", json=payload, timeout=20)
-    if _request_ok(response, 201):
-        return response.json()["id"]
-
     sensors_resp = session.get(f"{API_URL}/sensores/?casilla_id={casilla_id}&limit=200", timeout=20)
     if not _request_ok(sensors_resp, 200):
         raise RuntimeError(f"No se pudo consultar sensores: {sensors_resp.status_code} - {sensors_resp.text}")
 
-    for sensor in sensors_resp.json():
+    for sensor in sorted(sensors_resp.json(), key=lambda item: item["id"]):
         if sensor["numref"] == numref:
             return sensor["id"]
+
+    payload = {"casilla_id": casilla_id, "numref": numref, "tipo": tipo, "fabricante": fabricante}
+    response = session.post(f"{API_URL}/sensores/", json=payload, timeout=20)
+    if _request_ok(response, 201):
+        return response.json()["id"]
 
     raise RuntimeError(
         f"No se pudo crear ni encontrar sensor {numref}: {response.status_code} - {response.text}"
@@ -285,6 +325,9 @@ def main() -> None:
     print("=" * 60)
     print("SETUP DATOS SINTETICOS - AgroPrecision")
     print("=" * 60)
+    print(f"[INFO] API: {API_URL}")
+
+    _authenticate(session)
 
     farm_id = _create_or_get_demo_farm(session)
     crop_types = _create_crop_types(session, farm_id)
