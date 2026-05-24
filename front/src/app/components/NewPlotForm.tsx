@@ -46,8 +46,7 @@ export const NewPlotForm = () => {
         nombre: name,
         tamx: width,
         tamy: height,
-        // @ts-ignore
-        tipo_cultivo: finalCrop,
+        // TODO: Enviar tipo_cultivo_id (INT) cuando exista el flujo para recuperar los tipos de cultivo de la granja
       });
 
       navigate(`/farms/${farmId}`);

@@ -266,7 +266,7 @@ export const PlotDashboard = () => {
   // Carga inicial al montar o cambiar de parcela
   useEffect(() => {
     void loadPlotDashboard();
-  }, [plotId]);
+  }, [plotId, loadPlotDashboard]);
 
   // Arrancar polling automáticamente cuando hay sensores instalados,
   // pararlo cuando no hay ninguno, y limpiar al desmontar el componente.
@@ -277,7 +277,7 @@ export const PlotDashboard = () => {
       stopPolling();
     }
     return () => stopPolling();
-  }, [sensors.length]);
+  }, [sensors.length, startPolling, stopPolling]);
 
   const measurements = measurementsResponse?.items ?? [];
 
@@ -798,14 +798,74 @@ export const PlotDashboard = () => {
 
                 {selectedCellSensors.length > 0 && (
                   <div className="space-y-2">
-                    {selectedCellSensors.map((sensor) => (
-                      <div key={sensor.id} className="rounded-lg border border-border bg-muted/50 px-3 py-2">
-                        <p className="text-sm font-medium text-foreground">{sensor.numref}</p>
-                        <p className="text-xs text-muted-foreground">
-                          {sensor.tipo}{sensor.fabricante ? ` | ${sensor.fabricante}` : ''}
-                        </p>
-                      </div>
-                    ))}
+                    {selectedCellSensors.map((sensor) => {
+                      const latestMeasurement = measurementsByNewest.find(m => m.sensor_id === sensor.id);
+                      return (
+                        <div key={sensor.id} className="rounded-lg border border-border bg-muted/50 px-3 py-2">
+                          <div className="flex justify-between items-start">
+                            <div>
+                              <p className="text-sm font-medium text-foreground">{sensor.numref}</p>
+                              <p className="text-xs text-muted-foreground">
+                                {sensor.tipo}{sensor.fabricante ? ` | ${sensor.fabricante}` : ''}
+                              </p>
+                            </div>
+                            {latestMeasurement && (
+                              <Badge className="bg-green-100 dark:bg-green-900/40 text-green-800 dark:text-green-300 hover:bg-green-100">
+                                {formatNumericValue(latestMeasurement.valor)}
+                              </Badge>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+
+                {selectedCellSensors.length === 0 && sensors.length > 0 && (
+                  <div className="space-y-2 mt-4 pt-4 border-t border-border">
+                    <h5 className="text-sm font-semibold text-foreground mb-3 flex items-center">
+                      <Activity className="w-4 h-4 mr-2 text-blue-500" />
+                      Estimación por cercanía
+                    </h5>
+                    {Array.from(new Set(sensors.map(s => s.tipo))).map(tipo => {
+                      let nearestSensor: SensorRead | null = null;
+                      let minDistance = Infinity;
+                      let nearestCell: CasillaRead | null = null;
+
+                      cells.forEach(cell => {
+                        const cellSensors = sensorsByCellId.get(cell.id) || [];
+                        const targetSensor = cellSensors.find(s => s.tipo === tipo);
+                        
+                        if (targetSensor) {
+                          const distance = Math.abs(cell.posx - selectedCell.x) + Math.abs(cell.posy - selectedCell.y);
+                          
+                          if (distance < minDistance) {
+                            minDistance = distance;
+                            nearestSensor = targetSensor;
+                            nearestCell = cell;
+                          }
+                        }
+                      });
+
+                      if (!nearestSensor) return null;
+                      
+                      const latestMeasurement = measurementsByNewest.find(m => m.sensor_id === nearestSensor!.id);
+
+                      return (
+                        <div key={tipo} className="rounded-lg border border-blue-100 dark:border-blue-900 bg-blue-50/50 dark:bg-blue-950/20 px-3 py-2">
+                          <div className="flex justify-between items-center mb-1">
+                            <span className="text-sm font-medium text-blue-900 dark:text-blue-300 capitalize">{tipo}</span>
+                            <span className="text-xs text-blue-700 dark:text-blue-400 font-medium">a {minDistance} ud.</span>
+                          </div>
+                          <div className="flex justify-between items-center">
+                            <span className="text-xs text-muted-foreground">Origen: ({nearestCell?.posx}, {nearestCell?.posy})</span>
+                            <span className="font-bold text-blue-700 dark:text-blue-400">
+                              {latestMeasurement ? formatNumericValue(latestMeasurement.valor) : '--'}
+                            </span>
+                          </div>
+                        </div>
+                      );
+                    })}
                   </div>
                 )}
 

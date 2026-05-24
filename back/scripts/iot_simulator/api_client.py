@@ -51,7 +51,12 @@ class APIClient:
     @property
     def headers(self) -> dict:
         """Headers por defecto para peticiones JSON"""
-        return {"Content-Type": "application/json"}
+        headers = {"Content-Type": "application/json"}
+        # TODO: Añadir token JWT si la API exige autenticación (ej: para POST /parcelas)
+        # import os
+        # if token := os.getenv("SIMULATOR_JWT_TOKEN"):
+        #     headers["Authorization"] = f"Bearer {token}"
+        return headers
     
     def get_sensores(self, limit: int = 100) -> list[Sensor]:
         """Obtener lista de sensores disponibles"""
