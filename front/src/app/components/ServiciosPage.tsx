@@ -1,6 +1,6 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router';
-import { Sprout, LayoutGrid, Thermometer, WifiOff, BarChart3 } from 'lucide-react';
+import { Sprout, LayoutGrid, Thermometer, WifiOff, BarChart3, Menu, X } from 'lucide-react';
 
 const services = [
   {
@@ -27,7 +27,8 @@ const services = [
 
 export const ServiciosPage = () => {
   const navigate = useNavigate();
-  const [isScrolled, setIsScrolled] = React.useState(false);
+  const [isScrolled, setIsScrolled] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   React.useEffect(() => {
     const handleScroll = () => {
@@ -51,14 +52,61 @@ export const ServiciosPage = () => {
             AgroPrecision
           </span>
         </div>
+        
+        {/* Enlaces escritorio */}
         <nav className="hidden md:flex items-center gap-8 text-white/80 text-sm font-medium">
           <span onClick={() => navigate('/')} className="hover:text-white transition-colors drop-shadow-md cursor-pointer">Inicio</span>
           <span onClick={() => navigate('/nuestra-historia')} className="hover:text-white transition-colors drop-shadow-md cursor-pointer">Nuestra Historia</span>
           <span className="text-white font-bold drop-shadow-md cursor-default">Servicios</span>
         </nav>
+
+        {/* Botón menú hamburguesa móvil */}
+        <button 
+          className="md:hidden p-2 text-white hover:bg-white/10 rounded-lg transition-colors z-50"
+          onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+        >
+          {isMobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+        </button>
       </header>
 
-      <div className="relative z-10 flex-1 flex items-center justify-end px-6 md:px-12 lg:px-24 pb-20">
+      {/* Menú móvil desplegable */}
+      {isMobileMenuOpen && (
+        <div className="md:hidden fixed inset-0 z-40 bg-black/90 backdrop-blur-sm flex flex-col items-center justify-center space-y-8 animate-in fade-in duration-200">
+          <span 
+            onClick={() => { setIsMobileMenuOpen(false); navigate('/'); }}
+            className="text-2xl text-white font-medium hover:text-green-400 transition-colors cursor-pointer"
+          >
+            Inicio
+          </span>
+          <span 
+            onClick={() => { setIsMobileMenuOpen(false); navigate('/nuestra-historia'); }} 
+            className="text-2xl text-white font-medium hover:text-green-400 transition-colors cursor-pointer"
+          >
+            Nuestra Historia
+          </span>
+          <span 
+            className="text-2xl text-green-400 font-bold cursor-default"
+          >
+            Servicios
+          </span>
+          <div className="flex flex-col gap-4 mt-8 w-[80%] max-w-sm">
+            <button 
+              className="w-full py-3 bg-white/10 text-white rounded-lg border border-white/30"
+              onClick={() => navigate('/login')}
+            >
+              Iniciar Sesión
+            </button>
+            <button 
+              className="w-full py-3 bg-green-600 text-white font-bold rounded-lg"
+              onClick={() => navigate('/register')}
+            >
+              Comenzar Ahora
+            </button>
+          </div>
+        </div>
+      )}
+
+      <div className="relative z-10 flex-1 flex items-center justify-end px-6 md:px-12 lg:px-24 pb-20 mt-8 md:mt-0">
         <div className="max-w-xl w-full space-y-6 animate-in fade-in slide-in-from-right-8 duration-700">
           <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white tracking-tight drop-shadow-lg leading-tight text-right whitespace-nowrap">
             Nuestros <span className="text-green-400">Servicios</span>
