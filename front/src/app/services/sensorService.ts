@@ -25,3 +25,23 @@ export const createSensor = async (data: SensorCreate): Promise<SensorRead> => {
 export const deleteSensor = async (sensor_id: number): Promise<void> => {
   return apiRequest(`/sensores/${sensor_id}`, { method: "DELETE" });
 };
+
+export const createOrGetSensor = async (data: SensorCreate): Promise<SensorRead> => {
+  try {
+    return await createSensor(data);
+  } catch {
+    const allSensors = await apiRequest(`/sensores/?limit=500`);
+    const existing = allSensors.find((s: SensorRead) => s.numref === data.numref);
+    if (existing) {
+      if (existing.casilla_id !== data.casilla_id) {
+        return await apiRequest(`/sensores/${existing.id}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ casilla_id: data.casilla_id }),
+        });
+      }
+      return existing;
+    }
+    throw new Error("No se pudo crear el sensor");
+  }
+};
