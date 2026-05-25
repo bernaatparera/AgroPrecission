@@ -10,7 +10,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
 import { getMeasurementsByPlot, getParcelaById } from '../services/plotService';
 import { getCasillas, createCasilla } from '../services/cellService';
-import { createSensor, deleteSensor, getSensores } from '../services/sensorService';
+import { createOrGetSensor, deleteSensor, getSensores } from '../services/sensorService';
 import { MeasurementsByPlotResponse } from '../types/measurement';
 import { CasillaRead } from '../types/cell';
 import { SensorRead } from '../types/sensor';
@@ -473,7 +473,7 @@ export const PlotDashboard = () => {
         setCells((current) => [...current, backendCell as CasillaRead]);
       }
 
-      const createdSensor = await createSensor({
+      const createdSensor = await createOrGetSensor({
         casilla_id: backendCell.id,
         numref: trimmedNumref,
         fabricante: trimmedFabricante || null,
